@@ -1,0 +1,13 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite3
+data/uploads/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+discord_tokens
+picplan.tar

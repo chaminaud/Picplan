@@ -1,0 +1,181 @@
+<div id="{{ matrix_id }}" data-schedule-matrix data-event-id="{{ event.id }}" data-schedule-scope="{{ schedule_scope|default('all') }}" data-selected-date="{{ selected_date.isoformat() }}" data-refusals-remaining-label="{{ t('refusals_remaining') }}" data-queue-priority-label="{{ t('booking_queue_priority_hint') }}" data-queue-waiting-label="{{ t('booking_queue_waiting') }}" data-no-bookings-label="{{ t('no_bookings') }}" data-no-requests-label="{{ t('no_requests') }}" data-lunch-label="{{ t('lunch_break') }}" data-approve-label="{{ t('approve') }}" data-reject-label="{{ t('reject') }}" data-social-label="{{ t('social_url') }}" data-email-label="{{ t('email') }}" data-profile-photos-label="{{ t('participant_photos') }}" data-csrf-token="{{ csrf_token }}" class="mx-auto max-w-[95%] overflow-visible rounded-xl border border-slate-200 bg-white shadow-sm">
+  {% if matrix_error %}
+    <p role="alert" class="m-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm font-medium text-rose-800">{{ matrix_error }}</p>
+  {% endif %}
+  <div class="overflow-x-auto">
+    <div class="grid min-w-max"
+         style="grid-template-columns: 4.5rem repeat({{ grid_column_count }}, minmax(190px, 1fr)); grid-template-rows: 2.75rem{% if grid_row_count %} repeat({{ grid_row_count }}, 8px){% endif %};">
+      <div class="sticky left-0 top-0 z-30 flex items-center justify-center border-b border-r border-slate-400 bg-slate-800 font-bold text-white" style="grid-column: 1; grid-row: 1;">🕒</div>
+      {% for intervener in interveners %}
+        <button type="button" data-open-intervener-profile="{{ intervener.id }}"
+                aria-label="{{ t('view_intervener_profile') }}: {{ intervener.name }}"
+                title="{{ t('view_intervener_profile') }}"
+                class="sticky top-0 z-20 flex items-center justify-center border-b border-r border-slate-400 bg-slate-800 px-2 text-center text-xs font-bold text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-400"
+                style="grid-column: {{ loop.index + 1 }}; grid-row: 1;">
+          {{ intervener.participant_type.emoji or "🎨" }} {{ intervener.name }}
+        </button>
+      {% else %}
+        <div class="sticky top-0 z-20 flex items-center justify-center border-b border-slate-400 bg-slate-800 px-2 text-xs font-bold text-white" style="grid-column: 2; grid-row: 1;">{{ t("no_interveners") }}</div>
+      {% endfor %}
+
+      {% for row in rows %}
+        {% set row_number = loop.index + 1 %}
+        <div class="sticky left-0 z-10 border-r border-slate-300 bg-slate-50 {% if row.is_half_hour_line %}border-b border-b-slate-400{% endif %}" style="grid-column: 1; grid-row: {{ row_number }};"></div>
+        {% for cell in row.cells %}
+          <div class="border-r border-slate-200 bg-white {% if row.is_half_hour_line %}border-b border-b-slate-400{% elif cell.has_slot %}border-b border-b-slate-200{% endif %}" style="grid-column: {{ loop.index + 1 }}; grid-row: {{ row_number }};"></div>
+        {% endfor %}
+      {% else %}
+        <div class="p-6 text-center text-sm text-slate-500" style="grid-column: 1 / -1; grid-row: 2;">{{ t("no_slots") }}</div>
+      {% endfor %}
+
+      {% for hour in hour_labels %}
+        <div class="sticky left-0 z-20 flex items-start justify-center border-r-2 border-slate-300 bg-slate-50 pt-0.5 font-mono text-sm font-bold leading-tight text-slate-800" style="grid-column: 1; grid-row: {{ hour.row_start }} / span {{ hour.row_span }};">{{ hour.time }}</div>
+      {% endfor %}
+
+      {% for slot in grid_slots %}
+        {% set is_booked = slot.own_booking_status %}
+        <button type="button" data-open-schedule-slot="{{ slot.id }}"
+                aria-label="{% if slot.is_lunch_break %}{{ t('lunch_break') }} · {% endif %}{{ slot.display_start }}–{{ slot.display_end }}{% if slot.display_names %} · {{ slot.display_names }}{% endif %}{% if slot.display_locations %} · {{ slot.display_locations }}{% endif %}"
+                title="{% if slot.is_lunch_break %}{{ t('lunch_break') }} · {% endif %}{{ slot.display_start }}–{{ slot.display_end }}{% if slot.display_names %} · {{ slot.display_names }}{% endif %}{% if slot.display_locations %} · 📍 {{ slot.display_locations }}{% endif %}"
+                class="relative z-10 m-px min-h-0 min-w-0 overflow-hidden rounded text-left text-[9px] leading-[10px] shadow-sm transition hover:z-20 hover:brightness-95 focus:z-20 focus:outline-none focus:ring-2 focus:ring-indigo-500
+                  {% if slot.is_lunch_break %}bg-amber-100 text-amber-950 ring-1 ring-inset ring-amber-400
+                  {% elif is_booked == 'approved' or slot.has_approved_booking %}bg-emerald-600 text-white ring-1 ring-inset ring-emerald-800
+                  {% elif is_booked %}bg-blue-600 text-white ring-1 ring-inset ring-blue-800
+                  {% elif slot.bookings %}bg-indigo-100 text-indigo-950 ring-1 ring-inset ring-indigo-300
+                  {% else %}bg-slate-600 text-white ring-1 ring-inset ring-slate-700{% endif %}"
+                style="grid-column: {{ slot.column }}; grid-row: {{ slot.row_start }} / span {{ slot.row_span }};">
+          <span class="absolute left-1 top-0 block max-w-[calc(100%-0.5rem)] truncate p-[3px] text-left font-semibold">{{ slot.display_start }}–{{ slot.display_end }}</span>
+          {% if slot.is_lunch_break %}
+            <span class="block truncate px-1 text-center text-[15px] font-semibold leading-tight">{{ t("lunch_break") }}</span>
+          {% elif slot.display_names or slot.display_locations %}
+            <span class="block truncate px-1 text-[15px] leading-tight">{% if slot.display_names %}{{ slot.display_names }}{% endif %}{% if slot.display_locations %}{% if slot.display_names %} · {% endif %}📍 {{ slot.display_locations }}{% endif %}</span>
+          {% endif %}
+        </button>
+      {% endfor %}
+    </div>
+  </div>
+  <script type="application/json" data-schedule-slots>{{ grid_slots|tojson }}</script>
+  <script type="application/json" data-schedule-interveners>{{ intervener_profiles|tojson }}</script>
+
+  <div data-schedule-panel class="fixed inset-0 z-50 hidden" aria-hidden="true">
+    <button type="button" data-close-schedule-panel class="absolute inset-0 h-full w-full cursor-default bg-slate-950/40" aria-label="{{ t('cancel') }}"></button>
+    <aside role="dialog" aria-modal="true" aria-labelledby="schedule-panel-title" class="absolute inset-y-0 right-0 flex w-full max-w-md flex-col overflow-y-auto bg-white shadow-2xl">
+      <div class="flex items-start justify-between gap-4 border-b p-5">
+        <div>
+          <h2 id="schedule-panel-title" data-panel-title class="text-xl font-bold text-slate-900">{{ t("schedule") }}</h2>
+          <p data-panel-time class="mt-1 text-sm text-slate-600"></p>
+        </div>
+        <button type="button" data-close-schedule-panel class="rounded-lg px-3 py-1 text-2xl leading-none text-slate-500 hover:bg-slate-100" aria-label="{{ t('cancel') }}">×</button>
+      </div>
+      <div class="grid gap-5 p-5">
+        <ul data-panel-bookings class="grid gap-2"></ul>
+        <p data-panel-queue class="text-sm text-slate-600"></p>
+        {% if can_manage_schedule %}
+          <form action="/admin/events/{{ event.id }}/schedule" method="post" data-panel-create-form class="hidden grid gap-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="selected_intervener_id" value="{{ selected_intervener_id or '' }}">
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("intervener") }}
+              <select name="intervener_id" required class="rounded-lg border border-slate-300 px-3 py-2 font-normal">
+                {% for person in interveners %}<option value="{{ person.id }}" {% if person.id == selected_intervener_id %}selected{% endif %}>{{ person.name }}</option>{% endfor %}
+              </select>
+            </label>
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("date") }}
+              <input name="date" type="date" min="{{ event.start_date.isoformat() }}" max="{{ event.end_date.isoformat() }}" value="{{ selected_date.isoformat() }}" required class="rounded-lg border border-slate-300 px-3 py-2 font-normal">
+            </label>
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("start_time") }}
+              <input name="start_time" type="time" required class="rounded-lg border border-slate-300 px-3 py-2 font-normal">
+            </label>
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("end_time") }}
+              <input name="end_time" type="time" required class="rounded-lg border border-slate-300 px-3 py-2 font-normal">
+            </label>
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("capacity") }}
+              <input name="capacity" type="number" min="1" value="1" required class="rounded-lg border border-slate-300 px-3 py-2 font-normal">
+            </label>
+            <label class="flex items-center gap-2 text-sm font-semibold text-slate-800">
+              <input name="is_lunch_break" type="checkbox" class="rounded border-slate-300">
+              {{ t("lunch_break") }}
+            </label>
+            <button type="submit" class="justify-self-end rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-800">{{ t("add_time_slot") }}</button>
+          </form>
+          <form action="/admin/time-slots/0" method="post" data-panel-admin-form class="grid gap-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="selected_intervener_id" value="{{ selected_intervener_id or '' }}">
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("date") }}
+              <input name="date" type="date" min="{{ event.start_date.isoformat() }}" max="{{ event.end_date.isoformat() }}" required class="rounded-lg border border-slate-300 px-3 py-2 font-normal">
+            </label>
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("start_time") }}
+              <input name="start_time" type="time" required class="rounded-lg border border-slate-300 px-3 py-2 font-normal">
+            </label>
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("end_time") }}
+              <input name="end_time" type="time" required class="rounded-lg border border-slate-300 px-3 py-2 font-normal">
+            </label>
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("capacity") }}
+              <input name="capacity" type="number" min="1" required class="rounded-lg border border-slate-300 px-3 py-2 font-normal">
+            </label>
+            <label class="flex items-center gap-2 text-sm font-semibold text-slate-800">
+              <input name="is_lunch_break" type="checkbox" class="rounded border-slate-300">
+              {{ t("lunch_break") }}
+            </label>
+            <button type="submit" class="justify-self-end rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-800">{{ t("save") }}</button>
+          </form>
+          <form action="/admin/time-slots/0/delete" method="post" data-panel-delete-form onsubmit="return confirm('{{ t("confirm_delete") }}')" class="hidden justify-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="selected_date" value="{{ selected_date.isoformat() }}">
+            <input type="hidden" name="selected_intervener_id" value="{{ selected_intervener_id or '' }}">
+            <button type="submit" class="rounded-lg border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50">{{ t("delete_slot") }}</button>
+          </form>
+        {% elif participant and participant.participant_type.is_intervener %}
+          <form action="/interveners/time-slots/0" method="post" data-panel-intervener-form class="hidden grid gap-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="schedule_scope" value="{{ schedule_scope|default('mine') }}">
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("date") }}
+              <input name="date" type="date" min="{{ event.start_date.isoformat() }}" max="{{ event.end_date.isoformat() }}" required class="rounded-lg border border-slate-300 px-3 py-2 font-normal">
+            </label>
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("start_time") }}
+              <input name="start_time" type="time" required class="rounded-lg border border-slate-300 px-3 py-2 font-normal">
+            </label>
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("end_time") }}
+              <input name="end_time" type="time" required class="rounded-lg border border-slate-300 px-3 py-2 font-normal">
+            </label>
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("capacity") }}
+              <input name="capacity" type="number" min="1" required class="rounded-lg border border-slate-300 px-3 py-2 font-normal">
+            </label>
+            <label class="flex items-center gap-2 text-sm font-semibold text-slate-800">
+              <input name="is_lunch_break" type="checkbox" class="rounded border-slate-300">
+              {{ t("lunch_break") }}
+            </label>
+            <button type="submit" class="justify-self-end rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-800">{{ t("save") }}</button>
+          </form>
+        {% elif participant %}
+          <form action="/events/{{ event.id }}/bookings/toggle" method="post" hx-post="/events/{{ event.id }}/bookings/toggle" hx-target="#{{ matrix_id }}" hx-swap="outerHTML" data-panel-book-form class="grid gap-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="participant_id" value="{{ participant.id }}">
+            <input type="hidden" name="selected_date" value="{{ selected_date.isoformat() }}">
+            {% if selected_intervener %}<input type="hidden" name="intervener_id" value="{{ selected_intervener.id }}">{% endif %}
+            <input type="hidden" name="slot_id">
+            {% if matrix_id == "participant-schedule-container" %}<input type="hidden" name="return_to_participant" value="1">{% endif %}
+            <label class="grid gap-1 text-sm font-semibold text-slate-800">{{ t("location") }}
+              <select name="location_id" required class="rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal text-slate-900">
+                {% for location in locations %}<option value="{{ location.id }}">{{ location.name }}</option>{% endfor %}
+              </select>
+            </label>
+            {% if locations %}
+              <button type="submit" class="justify-self-end rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-800">{{ t("request_booking") }}</button>
+            {% else %}
+              <p class="text-sm text-amber-800">{{ t("no_event_locations") }}</p>
+            {% endif %}
+          </form>
+          <form action="/events/{{ event.id }}/bookings/toggle" method="post" hx-post="/events/{{ event.id }}/bookings/toggle" hx-target="#{{ matrix_id }}" hx-swap="outerHTML" data-panel-cancel-form class="hidden justify-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="participant_id" value="{{ participant.id }}">
+            <input type="hidden" name="selected_date" value="{{ selected_date.isoformat() }}">
+            {% if selected_intervener %}<input type="hidden" name="intervener_id" value="{{ selected_intervener.id }}">{% endif %}
+            <input type="hidden" name="slot_id">
+            {% if matrix_id == "participant-schedule-container" %}<input type="hidden" name="return_to_participant" value="1">{% endif %}
+            <button type="submit" class="rounded-lg border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50">{{ t("cancel_booking") }}</button>
+          </form>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+</div>

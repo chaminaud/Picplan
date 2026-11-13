@@ -1,0 +1,22 @@
+<dialog data-rejection-modal aria-labelledby="rejection-modal-title" class="w-[calc(100%-2rem)] max-w-lg rounded-2xl border-0 p-0 shadow-2xl backdrop:bg-slate-950/50">
+  <form method="post" class="grid gap-4 p-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="participant_id">
+    <input type="hidden" name="return_to_participant" value="0">
+    <input type="hidden" name="event_id">
+    <input type="hidden" name="selected_date">
+    <input type="hidden" name="schedule_scope">
+    <input type="hidden" name="dashboard_event_id">
+    <div>
+      <h2 id="rejection-modal-title" class="text-xl font-bold">{{ t("rejection_reason_title") }}</h2>
+      <p class="mt-2 text-sm text-slate-600">{{ t("rejection_reason_description") }}</p>
+    </div>
+    <label class="text-sm font-semibold">{{ t("rejection_reason") }}
+      <textarea name="reason" required maxlength="1000" rows="4" class="mt-1 w-full rounded-lg border px-3 py-2 font-normal"></textarea>
+    </label>
+    <div class="flex justify-end gap-3">
+      <button type="button" data-close-rejection-modal class="rounded-lg border px-4 py-2 text-sm font-semibold">{{ t("cancel") }}</button>
+      <button class="rounded-lg bg-rose-700 px-4 py-2 text-sm font-semibold text-white">{{ t("reject") }}</button>
+    </div>
+  </form>
+</dialog>

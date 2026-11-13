@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-7">
+  <a href="/admin" class="text-sm font-semibold text-indigo-700">← {{ t("dashboard") }}</a>
+  <h1 class="mt-3 text-3xl font-bold">{{ t("maintenance") }}</h1>
+  <p class="mt-2 max-w-3xl text-slate-600">{{ t("orphan_photos_description") }}</p>
+</div>
+{% if result_message %}
+  <p role="status" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">{{ t(result_message) }}</p>
+{% endif %}
+<section class="rounded-2xl border bg-white p-5 shadow-sm">
+  <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+    <h2 class="text-xl font-bold">{{ t("orphan_photos") }} <span class="text-sm font-normal text-slate-500">({{ orphan_files|length }})</span></h2>
+    <a href="/admin/maintenance" class="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50">{{ t("scan_again") }}</a>
+  </div>
+  {% if orphan_files %}
+    <ul class="grid gap-3">
+      {% for file in orphan_files %}
+        <li class="flex flex-wrap items-center justify-between gap-4 rounded-xl border p-3">
+          <div class="flex min-w-0 items-center gap-3">
+            <a href="/uploads/{{ file.name }}" target="_blank" rel="noopener noreferrer">
+              <img src="/uploads/{{ file.name }}" alt="" loading="lazy" class="h-16 w-16 rounded-lg border object-cover">
+            </a>
+            <div class="min-w-0">
+              <p class="break-all font-mono text-sm">{{ file.name }}</p>
+              <p class="mt-1 text-xs text-slate-500">{{ file.size }} {{ t("bytes") }}</p>
+            </div>
+          </div>
+          <form action="/admin/maintenance/delete" method="post" onsubmit="return confirm('{{ t("confirm_delete_orphan_photo") }}')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="filename" value="{{ file.name }}">
+            <button class="rounded-lg border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50">{{ t("delete") }}</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="rounded-xl border border-dashed p-8 text-center text-slate-500">{{ t("no_orphan_photos") }}</p>
+  {% endif %}
+</section>
+{% endblock %}

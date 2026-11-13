@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mx-auto max-w-2xl"><a href="/admin/events" class="text-sm font-semibold text-indigo-700">← {{ t("manage_events") }}</a><h1 class="mb-6 mt-3 text-3xl font-bold">{{ t("edit_event") }}</h1>
+<form action="/admin/events/{{ event.id }}/edit" method="post" class="grid gap-4 rounded-2xl border bg-white p-6 md:grid-cols-2">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label class="text-sm font-semibold">{{ t("title") }}<input name="title" required value="{{ event.title }}" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+  <label class="text-sm font-semibold">{{ t("daily_booking_limit") }}<input name="daily_limit" type="number" min="1" required value="{{ event.max_slots_per_participant_per_day }}" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+  <label class="text-sm font-semibold">{{ t("max_pending_bookings_per_slot") }}<input name="max_pending_bookings_per_slot" type="number" min="1" required value="{{ event.max_pending_bookings_per_slot }}" class="mt-1 w-full rounded-lg border px-3 py-2"><span class="mt-1 block text-xs font-normal text-slate-500">{{ t("max_pending_bookings_per_slot_hint") }}</span></label>
+  <label class="text-sm font-semibold">{{ t("start_date") }}<input name="start_date" type="date" required value="{{ event.start_date.isoformat() }}" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+  <label class="text-sm font-semibold">{{ t("end_date") }}<input name="end_date" type="date" required value="{{ event.end_date.isoformat() }}" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+  <label class="text-sm font-semibold md:col-span-2">{{ t("description") }}<textarea name="description" rows="4" class="mt-1 w-full rounded-lg border px-3 py-2">{{ event.description or "" }}</textarea></label>
+  <label class="flex items-center gap-2 text-sm md:col-span-2"><input name="allow_same_intervener" type="checkbox" {% if event.allow_booking_same_intervener_per_day %}checked{% endif %}>{{ t("allow_same_intervener") }}</label>
+  <button class="justify-self-start rounded-lg bg-indigo-700 px-5 py-2.5 font-semibold text-white">{{ t("save_changes") }}</button>
+</form></div>
+{% endblock %}

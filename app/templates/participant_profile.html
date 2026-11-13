@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mx-auto max-w-3xl">
+  <a href="/participant" class="text-sm font-semibold text-indigo-700">← {{ t("participant_area") }}</a>
+  <h1 class="mb-2 mt-3 text-3xl font-bold">{{ t("edit_my_profile") }}</h1>
+  <p class="mb-6 text-sm text-slate-600">{{ t("participant_profile_role_hint") }}</p>
+  {% with modal_message=profile_message, modal_title="notification" %}
+    {% include "partials/message_modal.html" %}
+  {% endwith %}
+  <form action="/participant/profile" method="post" class="grid gap-5 rounded-2xl border bg-white p-6 md:grid-cols-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label class="text-sm font-semibold">{{ t("name") }}
+      <input name="name" required value="{{ participant.name }}" class="mt-1 w-full rounded-lg border px-3 py-2 font-normal">
+    </label>
+    <div class="text-sm">
+      <span class="font-semibold">{{ t("participant_type") }}</span>
+      <p class="mt-1 rounded-lg bg-slate-100 px-3 py-2 text-slate-600">{{ participant.participant_type.emoji or "👤" }} {{ participant.participant_type.name }}</p>
+    </div>
+    <div class="text-sm md:col-span-2">
+      <span class="font-semibold">{{ t("email") }}</span>
+      <p class="mt-1 rounded-lg bg-slate-100 px-3 py-2 text-slate-600">{{ participant.email or "—" }}</p>
+    </div>
+    <label class="text-sm font-semibold">{{ t("discord_handle") }}
+      <input name="discord_handle" value="{{ participant.discord_handle or '' }}" class="mt-1 w-full rounded-lg border px-3 py-2 font-normal">
+    </label>
+    <label class="text-sm font-semibold">{{ t("social_url") }}
+      <input name="social_url" type="url" value="{{ participant.social_url or '' }}" class="mt-1 w-full rounded-lg border px-3 py-2 font-normal">
+    </label>
+    <div>
+      <p class="text-sm font-semibold">{{ t("avatar_url") }}</p>
+      <input id="avatar_url" name="avatar_url" type="hidden" value="{{ participant.avatar_url or '' }}">
+      <div class="mt-2">{% with target_id="avatar_url", append="false", max_items=1 %}{% include "partials/image_upload.html" %}{% endwith %}</div>
+    </div>
+    <div class="md:col-span-2">
+      <p class="text-sm font-semibold">{{ t("participant_photos") }}</p>
+      <p class="mt-1 text-xs text-slate-500">{{ t("participant_photo_limit_hint") }}</p>
+      <textarea id="participant-photo-urls" name="photo_urls" class="hidden">{% for photo in participant.photos %}{{ photo.photo_url }}{% if not loop.last %}
+{% endif %}{% endfor %}</textarea>
+      <div class="mt-2">{% with target_id="participant-photo-urls", append="true", max_items=10 %}{% include "partials/image_upload.html" %}{% endwith %}</div>
+    </div>
+    <label class="text-sm font-semibold md:col-span-2">{{ t("bio") }}
+      <textarea name="bio" rows="5" class="mt-1 w-full rounded-lg border px-3 py-2 font-normal">{{ participant.bio or "" }}</textarea>
+    </label>
+    <button class="justify-self-start rounded-lg bg-indigo-700 px-5 py-2.5 font-semibold text-white hover:bg-indigo-800">{{ t("save_changes") }}</button>
+  </form>
+</div>
+{% endblock %}

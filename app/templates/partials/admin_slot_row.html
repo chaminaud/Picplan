@@ -1,0 +1,13 @@
+<article id="slot-{{ slot.id }}" class="rounded-2xl border bg-white p-4">
+  <form action="/admin/time-slots/{{ slot.id }}" method="post" hx-post="/admin/time-slots/{{ slot.id }}" hx-target="#slot-{{ slot.id }}" hx-swap="outerHTML" class="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label class="text-xs font-semibold text-slate-600">{{ t("date") }}<input name="date" type="date" min="{{ slot.event.start_date.isoformat() }}" max="{{ slot.event.end_date.isoformat() }}" value="{{ slot.date.isoformat() }}" required class="mt-1 w-full rounded-lg border px-2 py-2 text-sm"></label>
+    <label class="text-xs font-semibold text-slate-600">{{ t("start_time") }}<input name="start_time" type="time" value="{{ slot.start_time.strftime('%H:%M') }}" required class="mt-1 w-full rounded-lg border px-2 py-2 text-sm"></label>
+    <label class="text-xs font-semibold text-slate-600">{{ t("end_time") }}<input name="end_time" type="time" value="{{ slot.end_time.strftime('%H:%M') }}" required class="mt-1 w-full rounded-lg border px-2 py-2 text-sm"></label>
+    <label class="text-xs font-semibold text-slate-600">{{ t("capacity") }}<input name="capacity" type="number" min="1" value="{{ slot.capacity }}" required class="mt-1 w-full rounded-lg border px-2 py-2 text-sm"></label>
+    <label class="flex items-center gap-2 pb-2 text-xs"><input name="is_lunch_break" type="checkbox" {% if slot.is_lunch_break %}checked{% endif %}>{{ t("lunch_break") }}</label>
+    <button class="rounded-lg bg-indigo-700 px-3 py-2 text-sm font-semibold text-white">{{ t("save") }}</button>
+  </form>
+  <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-sm"><p class="text-slate-600">{{ slot.bookings|length }} {{ t("bookings") }}{% for booking in slot.bookings %} · {{ booking.participant.name }} ({{ t(booking.status.value) }}){% endfor %}</p>
+  {% if not slot.bookings %}<form action="/admin/time-slots/{{ slot.id }}/delete" method="post" onsubmit="return confirm('{{ t("confirm_delete") }}')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="text-xs font-semibold text-rose-700">{{ t("delete_slot") }}</button></form>{% endif %}</div>
+</article>

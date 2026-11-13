@@ -1,0 +1,19 @@
+<div class="image-upload" data-upload-target="{{ target_id }}" data-append="{{ append }}" data-max-items="{{ max_items|default('') }}"
+     data-uploading="{{ t('uploading_image') }}" data-success="{{ t('image_uploaded') }}"
+     data-error="{{ t('image_upload_error') }}" data-limit-reached="{% if max_items|default(0)|int == 1 %}{{ t('avatar_image_limit_reached') }}{% else %}{{ t('participant_photo_limit_reached') }}{% endif %}"
+     data-gallery-label="{{ t('participant_photos') }}" data-remove-label="{{ t('delete') }}"
+     data-csrf-token="{{ csrf_token }}">
+  <input class="image-upload-input sr-only" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/jxl" {% if max_items is defined and max_items > 1 %}multiple{% endif %}>
+  <button type="button" class="image-upload-button rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-800 hover:bg-indigo-100">
+    {{ t("choose_image") }}
+  </button>
+  <div class="image-drop-zone mt-2 rounded-xl border-2 border-dashed border-slate-300 px-4 py-4 text-center text-sm text-slate-500 transition">
+    {{ t("drop_image_here") }}
+  </div>
+  <p class="image-upload-status mt-1 text-xs text-slate-500" aria-live="polite"></p>
+  {% if max_items is defined %}
+    <div class="image-upload-gallery mt-3 flex flex-wrap gap-2" aria-live="polite"></div>
+  {% else %}
+    <img class="image-upload-preview mt-2 hidden max-h-36 max-w-full rounded-lg border object-contain" alt="{{ t('image_preview') }}">
+  {% endif %}
+</div>

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex flex-wrap items-end justify-between gap-4"><div><p class="text-sm font-semibold uppercase tracking-wider text-indigo-600">{{ t("administration") }}</p><h1 class="mt-1 text-3xl font-bold">{{ t("dashboard") }}</h1></div><a class="rounded-xl bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white" href="/admin/events">{{ t("create_event") }} +</a></div>
+<div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  {% for key, value in counts.items() %}<div class="rounded-2xl border bg-white p-5"><p class="text-sm text-slate-500">{{ t(key) }}</p><p class="mt-2 text-3xl font-bold">{{ value }}</p></div>{% endfor %}
+</div>
+<div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+{% for href, icon, key in [("/admin/events", "🗓️", "manage_events"), ("/admin/locations", "📍", "manage_locations"), ("/admin/participant-types", "🏷️", "manage_types"), ("/admin/participants", "👥", "manage_participants"), ("/admin/bookings", "📋", "manage_bookings")] %}
+  <a href="{{ href }}" class="rounded-2xl border bg-white p-5 hover:border-indigo-300 hover:shadow-sm"><span class="text-2xl">{{ icon }}</span><h2 class="mt-3 font-bold">{{ t(key) }} →</h2></a>
+{% endfor %}
+<a href="/admin/slots/create" class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 hover:border-indigo-400 hover:shadow-sm"><span class="text-2xl">⏱️</span><h2 class="mt-3 font-bold">{{ t("create_booking_slots") }} →</h2></a>
+<a href="/admin/debug/profile" class="rounded-2xl border border-amber-200 bg-amber-50 p-5 hover:border-amber-400 hover:shadow-sm"><span class="text-2xl">🪪</span><h2 class="mt-3 font-bold">{{ t("debug_profile") }} →</h2></a>
+<a href="/admin/maintenance" class="rounded-2xl border border-slate-200 bg-slate-50 p-5 hover:border-indigo-300 hover:shadow-sm"><span class="text-2xl">🧹</span><h2 class="mt-3 font-bold">{{ t("maintenance") }} →</h2></a>
+</div>
+<section class="mt-10"><h2 class="mb-4 text-xl font-bold">{{ t("event_schedules") }}</h2><div class="grid gap-3 sm:grid-cols-2">
+{% for event in events %}<a href="/admin/events/{{ event.id }}/schedule" class="rounded-xl border bg-white p-4 font-semibold hover:border-indigo-300">{{ event.title }} <span class="float-right text-indigo-700">→</span></a>{% else %}<p class="text-slate-500">{{ t("no_events_yet") }}</p>{% endfor %}
+</div></section>
+{% endblock %}

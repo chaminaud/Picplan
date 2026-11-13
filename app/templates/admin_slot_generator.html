@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mx-auto max-w-4xl">
+  <a href="/admin" class="text-sm font-semibold text-indigo-700">← {{ t("dashboard") }}</a>
+  <p class="mt-4 text-sm font-semibold uppercase tracking-wider text-indigo-600">{{ t("schedule") }}</p>
+  <h1 class="mt-1 text-3xl font-bold">{{ t("create_booking_slots") }}</h1>
+  <p class="mt-2 text-slate-600">{{ t("slot_generator_description") }}</p>
+
+  {% if error %}<p role="alert" class="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-800">{{ error }}</p>{% endif %}
+  <form action="/admin/slots/create" method="post" class="mt-7 grid gap-5 rounded-2xl border bg-white p-6 shadow-sm md:grid-cols-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% set values = form_values or {} %}
+    <label class="text-sm font-semibold">{{ t("event") }}
+      <select name="event_id" required onchange="window.location.href='/admin/slots/create?event_id='+this.value" class="mt-1 w-full rounded-xl border px-3 py-2.5 font-normal">
+        <option value="">{{ t("choose_event") }}</option>
+        {% for event in events %}
+          <option value="{{ event.id }}" {% if (selected_event and selected_event.id == event.id) or values.get("event_id") == event.id|string %}selected{% endif %}>{{ event.title }} · {{ event.start_date.strftime("%d/%m/%Y") }}–{{ event.end_date.strftime("%d/%m/%Y") }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="text-sm font-semibold">{{ t("intervener") }}
+      <select name="intervener_id" required class="mt-1 w-full rounded-xl border px-3 py-2.5 font-normal">
+        <option value="">{{ t("choose_intervener") }}</option>
+        {% for person in interveners %}
+          <option value="{{ person.id }}" {% if values.get("intervener_id") == person.id|string %}selected{% endif %}>{{ person.participant_type.emoji or "🎨" }} {{ person.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label class="text-sm font-semibold">{{ t("booking_duration_minutes") }}
+      <div class="mt-1 flex items-center gap-2"><input name="duration_minutes" type="number" min="1" max="1440" required value="{{ values.get('duration_minutes', '30') }}" class="w-full rounded-xl border px-3 py-2.5 font-normal"><span class="text-sm font-normal text-slate-500">{{ t("minutes") }}</span></div>
+    </label>
+    <label class="text-sm font-semibold">{{ t("time_between_bookings") }}
+      <div class="mt-1 flex items-center gap-2"><input name="break_minutes" type="number" min="0" max="1440" required value="{{ values.get('break_minutes', '0') }}" class="w-full rounded-xl border px-3 py-2.5 font-normal"><span class="text-sm font-normal text-slate-500">{{ t("minutes") }}</span></div>
+    </label>
+
+    <fieldset class="rounded-xl border p-4">
+      <legend class="px-1 text-sm font-semibold">{{ t("daily_working_hours") }}</legend>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="text-sm">{{ t("start_time") }}<input name="start_time" type="time" required value="{{ values.get('start_time', '09:00') }}" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+        <label class="text-sm">{{ t("end_time") }}<input name="end_time" type="time" required value="{{ values.get('end_time', '17:00') }}" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+      </div>
+    </fieldset>
+    <fieldset class="rounded-xl border p-4">
+      <legend class="px-1 text-sm font-semibold">{{ t("lunch_break") }}</legend>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="text-sm">{{ t("start_time") }}<input name="lunch_start" type="time" required value="{{ values.get('lunch_start', '12:00') }}" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+        <label class="text-sm">{{ t("end_time") }}<input name="lunch_end" type="time" required value="{{ values.get('lunch_end', '13:30') }}" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+      </div>
+      <p class="mt-2 text-xs text-slate-500">{{ t("lunch_break_hint") }}</p>
+    </fieldset>
+
+    <p class="rounded-xl bg-indigo-50 p-4 text-sm text-indigo-900 md:col-span-2">{{ t("slots_generated_for_event_days") }}</p>
+    <div class="flex flex-wrap items-center gap-3 md:col-span-2">
+      <button {% if not events or not interveners %}disabled{% endif %} class="rounded-xl bg-indigo-700 px-5 py-3 font-semibold text-white hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-50">{{ t("generate_slots") }}</button>
+      <a href="{% if selected_event %}/admin/events/{{ selected_event.id }}/schedule{% else %}/admin{% endif %}" class="rounded-xl border px-5 py-3 text-sm font-semibold">{{ t("cancel") }}</a>
+      {% if not interveners %}<span class="text-sm text-amber-800">{{ t("assign_intervener_to_event") }} <a class="font-semibold underline" href="{% if selected_event %}/admin/events/{{ selected_event.id }}/participants{% else %}/admin/events{% endif %}">{{ t("manage_event_participants") }}</a></span>{% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

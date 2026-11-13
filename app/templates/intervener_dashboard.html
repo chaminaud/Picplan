@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="/participant?participant_id={{ participant.id }}{% if selected_event_id %}&amp;event_id={{ selected_event_id }}{% endif %}" class="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-indigo-600 hover:text-indigo-800"><span aria-hidden="true">←</span>{{ t("intervener_area") }}</a>
+<h1 class="mt-1 text-3xl font-bold">{{ participant.participant_type.emoji or "🎨" }} {{ participant.name }}</h1>
+<p class="mt-2 text-slate-600">{{ t("review_requests_description") }}</p>
+<form action="/interveners/{{ participant.id }}" method="get" class="mt-5 max-w-xl">
+  <label class="text-sm font-semibold">{{ t("event") }}
+    <select name="event_id" onchange="this.form.submit()" class="mt-1 w-full rounded-lg border bg-white px-3 py-2 font-normal">
+      <option value="">{{ t("all_events") }}</option>
+      {% for event in events %}
+        <option value="{{ event.id }}" {% if selected_event_id == event.id|string %}selected{% endif %}>{{ event.title }}</option>
+      {% endfor %}
+    </select>
+  </label>
+</form>
+{% if slot_message %}
+  <dialog data-auto-message-modal aria-labelledby="intervener-message-title" class="w-[calc(100%-2rem)] max-w-lg rounded-2xl border-0 p-0 shadow-2xl backdrop:bg-slate-950/50">
+    <div class="grid gap-5 p-6">
+      <div>
+        <h2 id="intervener-message-title" class="text-xl font-bold text-slate-900">{{ t("notification") }}</h2>
+        <p class="mt-2 text-sm leading-6 text-slate-600">{{ slot_message }}</p>
+      </div>
+      <form method="dialog" class="justify-self-end"><button class="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-semibold text-white">{{ t("close") }}</button></form>
+    </div>
+  </dialog>
+{% endif %}
+
+<section class="mt-6 grid gap-4 rounded-2xl border bg-white p-5 shadow-sm md:grid-cols-2">
+  <div>
+    <h2 class="text-lg font-bold">{{ t("manage_my_schedule") }}</h2>
+    <p class="mt-1 text-sm text-slate-600">{{ t("intervener_schedule_tools_description") }}</p>
+    <button type="button" data-open-slot-generator class="mt-4 rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-800">{{ t("generate_slots") }}</button>
+  </div>
+  <div class="rounded-xl border border-rose-200 bg-rose-50 p-4">
+    <h3 class="font-semibold text-rose-900">{{ t("delete_event_slots") }}</h3>
+    <p class="mt-1 text-sm text-rose-800">{{ t("delete_event_slots_description") }}</p>
+    <form action="/interveners/{{ participant.id }}/slots/delete" method="post" class="mt-3 flex flex-wrap items-end gap-3" data-confirm="{{ t('confirm_delete_event_slots') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label class="min-w-52 flex-1 text-sm font-semibold text-rose-900">{{ t("event") }}
+        <select name="event_id" required class="mt-1 w-full rounded-lg border border-rose-200 bg-white px-3 py-2 font-normal text-slate-900">
+          {% for event in events %}
+            <option value="{{ event.id }}" {% if selected_event_id == event.id|string %}selected{% endif %}>{{ event.title }}</option>
+          {% else %}
+            <option value="">{{ t("no_events_yet") }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button {% if not events %}disabled{% endif %} class="rounded-lg border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50">{{ t("delete_empty_slots") }}</button>
+    </form>
+  </div>
+</section>
+
+<dialog data-slot-generator-modal aria-labelledby="slot-generator-title" class="w-[calc(100%-2rem)] max-w-2xl rounded-2xl border-0 p-0 shadow-2xl backdrop:bg-slate-950/50">
+  <div class="flex max-h-[90vh] flex-col">
+    <div class="flex items-start justify-between gap-4 border-b p-5">
+      <div>
+        <h2 id="slot-generator-title" class="text-xl font-bold">{{ t("create_booking_slots") }}</h2>
+        <p class="mt-1 text-sm text-slate-600">{{ t("slot_generator_description") }}</p>
+      </div>
+      <form method="dialog"><button class="rounded-lg px-2 py-1 text-2xl leading-none text-slate-500 hover:bg-slate-100" aria-label="{{ t('close') }}">×</button></form>
+    </div>
+    <form action="/interveners/{{ participant.id }}/slots/create" method="post" class="grid gap-4 overflow-y-auto p-5 sm:grid-cols-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label class="text-sm font-semibold sm:col-span-2">{{ t("event") }}
+        <select name="event_id" required class="mt-1 w-full rounded-xl border px-3 py-2.5 font-normal">
+          {% for event in events %}
+            <option value="{{ event.id }}" {% if selected_event_id == event.id|string %}selected{% endif %}>{{ event.title }} · {{ event.start_date.strftime("%d/%m/%Y") }}–{{ event.end_date.strftime("%d/%m/%Y") }}</option>
+          {% else %}
+            <option value="">{{ t("no_events_yet") }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="text-sm font-semibold">{{ t("booking_duration_minutes") }}
+        <div class="mt-1 flex items-center gap-2"><input name="duration_minutes" type="number" min="1" max="1440" required value="30" class="w-full rounded-xl border px-3 py-2.5 font-normal"><span class="text-sm font-normal text-slate-500">{{ t("minutes") }}</span></div>
+      </label>
+      <label class="text-sm font-semibold">{{ t("time_between_bookings") }}
+        <div class="mt-1 flex items-center gap-2"><input name="break_minutes" type="number" min="0" max="1440" required value="0" class="w-full rounded-xl border px-3 py-2.5 font-normal"><span class="text-sm font-normal text-slate-500">{{ t("minutes") }}</span></div>
+      </label>
+      <fieldset class="rounded-xl border p-4">
+        <legend class="px-1 text-sm font-semibold">{{ t("daily_working_hours") }}</legend>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="text-sm">{{ t("start_time") }}<input name="start_time" type="time" required value="09:00" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+          <label class="text-sm">{{ t("end_time") }}<input name="end_time" type="time" required value="17:00" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+        </div>
+      </fieldset>
+      <fieldset class="rounded-xl border p-4">
+        <legend class="px-1 text-sm font-semibold">{{ t("lunch_break") }}</legend>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="text-sm">{{ t("start_time") }}<input name="lunch_start" type="time" required value="12:00" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+          <label class="text-sm">{{ t("end_time") }}<input name="lunch_end" type="time" required value="13:30" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+        </div>
+        <p class="mt-2 text-xs text-slate-500">{{ t("lunch_break_hint") }}</p>
+      </fieldset>
+      <p class="rounded-xl bg-indigo-50 p-4 text-sm text-indigo-900 sm:col-span-2">{{ t("slots_generated_for_event_days") }}</p>
+      <div class="flex justify-end gap-3 sm:col-span-2">
+        <button type="button" data-close-slot-generator class="rounded-lg border px-4 py-2 text-sm font-semibold">{{ t("cancel") }}</button>
+        <button {% if not events %}disabled{% endif %} class="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{{ t("generate_slots") }}</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+{% include "partials/rejection_modal.html" %}
+
+<div class="mt-8 grid gap-4">
+{% for slot in slots %}
+  {% set intervener_id = participant.id %}
+  {% set return_to_participant = false %}
+  {% include "partials/intervener_slot.html" %}
+{% else %}<div class="rounded-2xl border border-dashed bg-white p-10 text-center text-slate-500">{{ t("no_slots") }}</div>{% endfor %}
+</div>
+{% endblock %}

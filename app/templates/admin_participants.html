@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-7"><a href="/admin" class="text-sm font-semibold text-indigo-700">← {{ t("dashboard") }}</a><h1 class="mt-3 text-3xl font-bold">{{ t("manage_participants") }}</h1></div>
+{% with modal_message=participant_form_message, modal_title="notification" %}{% include "partials/message_modal.html" %}{% endwith %}
+{% if not types %}<p class="mb-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{{ t("create_type_first") }}</p>{% endif %}
+<form action="/admin/participants" method="post" class="mb-8 grid gap-4 rounded-2xl border bg-white p-5 md:grid-cols-2"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label class="text-sm font-semibold">{{ t("name") }}<input name="name" required class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+  <label class="text-sm font-semibold">{{ t("participant_type") }}<select name="type_id" required {% if not types %}disabled{% endif %} class="mt-1 w-full rounded-lg border px-3 py-2">{% for item in types %}<option value="{{ item.id }}">{{ item.emoji or "👤" }} {{ item.name }}</option>{% endfor %}</select></label>
+  <label class="text-sm font-semibold">{{ t("email") }}<input name="email" type="email" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+  <label class="text-sm font-semibold">{{ t("discord_handle") }}<input name="discord_handle" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+  <label class="text-sm font-semibold">{{ t("social_url") }}<input name="social_url" type="url" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+  <div>
+    <p class="text-sm font-semibold">{{ t("avatar_url") }}</p>
+    <input id="avatar_url" name="avatar_url" type="hidden">
+    <div class="mt-2">{% with target_id="avatar_url", append="false", max_items=1 %}{% include "partials/image_upload.html" %}{% endwith %}</div>
+  </div>
+  <div class="md:col-span-2">
+    <p class="text-sm font-semibold">{{ t("participant_photos") }}</p>
+    <p class="mt-1 text-xs text-slate-500">{{ t("participant_photo_limit_hint") }}</p>
+    <textarea id="participant-photo-urls" name="photo_urls" class="hidden"></textarea>
+    <div class="mt-2">{% with target_id="participant-photo-urls", append="true", max_items=10 %}{% include "partials/image_upload.html" %}{% endwith %}</div>
+  </div>
+  <label class="text-sm font-semibold md:col-span-2">{{ t("bio") }}<textarea name="bio" rows="2" class="mt-1 w-full rounded-lg border px-3 py-2"></textarea></label>
+  <button {% if not types %}disabled{% endif %} class="justify-self-start rounded-lg bg-indigo-700 px-4 py-2 font-semibold text-white disabled:opacity-50">{{ t("add_participant") }}</button>
+</form>
+<div class="grid gap-3 md:grid-cols-2">{% for person in participants %}<article class="flex items-center gap-4 rounded-xl border bg-white p-4">
+  {% if person.avatar_url %}<img src="{{ person.avatar_url }}" alt="" class="h-12 w-12 rounded-full object-cover">{% else %}<span class="grid h-12 w-12 place-items-center rounded-full bg-indigo-50 text-xl">{{ person.participant_type.emoji or "👤" }}</span>{% endif %}
+  <div class="min-w-0 flex-1"><h2 class="truncate font-bold">{{ person.name }}</h2><p class="mt-1 text-sm text-slate-500">{{ person.participant_type.name }}{% if person.email %} · {{ person.email }}{% endif %}</p></div>
+  <div class="flex gap-3">{% if person.participant_type.is_intervener %}<a class="text-sm font-semibold text-indigo-700" href="/interveners/{{ person.id }}">{{ t("intervener_area") }}</a>{% endif %}<a class="text-sm font-semibold text-indigo-700" href="/admin/participants/{{ person.id }}/edit">{{ t("edit") }}</a><form action="/admin/participants/{{ person.id }}/delete" method="post" onsubmit="return confirm('{{ t("confirm_delete") }}')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="text-sm font-semibold text-rose-700">{{ t("delete") }}</button></form></div>
+</article>{% else %}<p class="rounded-xl border bg-white p-5 text-slate-500">{{ t("no_participants") }}</p>{% endfor %}</div>
+{% endblock %}

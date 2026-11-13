@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-8"><p class="text-sm font-semibold uppercase tracking-wider text-indigo-600">{{ t("participant_area") }}</p><h1 class="mt-1 text-3xl font-bold">{{ t("find_your_schedule") }}</h1><p class="mt-2 text-slate-600">{{ t("choose_profile_description") }}</p></div>
+{% with modal_message=discord_auth_message, modal_title="discord_sign_in_title" %}
+  {% include "partials/message_modal.html" %}
+{% endwith %}
+{% with modal_message=booking_action_message, modal_title="notification" %}
+  {% include "partials/message_modal.html" %}
+{% endwith %}
+{% if participant and participant.participant_type.is_intervener %}
+  {% include "partials/rejection_modal.html" %}
+{% endif %}
+{% if participant %}
+  <section class="mb-8 rounded-2xl border bg-white p-5 shadow-sm">
+    {% if generated_slots is not none %}
+    <p class="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">{{ t("intervener_slots_generated").format(count=generated_slots) }}</p>
+    {% endif %}
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div><h2 class="text-xl font-bold">{{ t("event_schedule") }}</h2><p class="mt-1 text-sm text-slate-500">{% if participant.participant_type.is_intervener %}{{ t("intervener_schedule_hint") }}{% else %}{{ t("matrix_booking_hint") }}{% endif %}</p></div>
+      <div class="flex flex-wrap gap-2">
+        {% if participant.participant_type.is_intervener %}
+        <a href="/interveners/{{ participant.id }}" class="rounded-full bg-indigo-700 px-3 py-1 text-sm font-semibold text-white hover:bg-indigo-800">{{ t("manage_my_schedule") }}</a>
+        {% endif %}
+        <a href="/participant/profile" class="rounded-full bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700 hover:bg-indigo-100">{{ participant.name }} · {{ t("edit_my_profile") }}</a>
+      </div>
+    </div>
+    {% if events %}
+    <form action="/participant" method="get" class="flex flex-wrap items-end gap-3">
+      <input type="hidden" name="participant_id" value="{{ participant.id }}">
+      {% if participant.participant_type.is_intervener %}
+      <label class="min-w-52 text-sm font-semibold">{{ t("schedule_scope") }}
+        <select name="schedule_scope" onchange="this.form.submit()" class="mt-1 w-full rounded-lg border px-3 py-2 font-normal">
+          <option value="mine" {% if schedule_scope == "mine" %}selected{% endif %}>{{ t("my_schedule_only") }}</option>
+          <option value="all" {% if schedule_scope == "all" %}selected{% endif %}>{{ t("all_intervener_schedules") }}</option>
+        </select>
+      </label>
+      {% endif %}
+      <label class="min-w-60 flex-1 text-sm font-semibold">{{ t("event") }}
+        <select name="event_id" required onchange="this.form.querySelector('[name=selected_date]')?.remove(); this.form.querySelector('[name=intervener_id]')?.remove(); this.form.submit()" class="mt-1 w-full rounded-lg border px-3 py-2 font-normal">
+          {% for event in events %}
+            <option value="{{ event.id }}" {% if selected_event and selected_event.id == event.id %}selected{% endif %}>{{ event.title }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      {% if not participant.participant_type.is_intervener and selected_event %}
+      <label class="min-w-52 text-sm font-semibold">{{ t("intervener") }}
+        <select name="intervener_id" onchange="this.form.submit()" class="mt-1 w-full rounded-lg border px-3 py-2 font-normal">
+          <option value="">{{ t("all_interveners") }}</option>
+          {% for person in event_interveners %}
+            <option value="{{ person.id }}" {% if selected_intervener and selected_intervener.id == person.id %}selected{% endif %}>{{ person.participant_type.emoji or "🎨" }} {{ person.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      {% endif %}
+      {% if selected_event and selected_date %}
+      <label class="text-sm font-semibold">{{ t("date") }}
+        <select name="selected_date" onchange="this.form.submit()" class="mt-1 rounded-lg border px-3 py-2 font-normal">
+          {% for day in matrix.days %}
+            <option value="{{ day.isoformat() }}" {% if selected_date == day %}selected{% endif %}>{{ day.strftime("%a %d %b %Y") }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      {% endif %}
+      <noscript><button class="rounded-lg bg-indigo-700 px-4 py-2 font-semibold text-white">{{ t("show_schedule") }}</button></noscript>
+    </form>
+    {% else %}
+      <p class="rounded-xl border border-dashed p-6 text-center text-slate-500">{{ t("no_events_yet") }}</p>
+    {% endif %}
+  </section>
+  {% if matrix %}
+    {% include "partials/schedule_matrix.html" %}
+  {% endif %}
+  {% if not participant.participant_type.is_intervener %}
+  <section class="mt-12">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 class="text-2xl font-bold">{{ t("my_bookings") }}</h2><span class="text-sm text-slate-500">{{ participant.name }}</span></div>
+    <div class="grid gap-3">
+    {% for booking in bookings %}
+      <article class="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-white p-4">
+        <div><p class="font-semibold">{{ booking.time_slot.event.title }} · {{ booking.time_slot.intervener.name }}</p><p class="mt-1 text-sm text-slate-500">{{ booking.time_slot.date.strftime("%d/%m/%Y") }} · {{ booking.time_slot.start_time|format_time(language) }} · {{ booking.location.name }}</p></div>
+        <div class="flex items-center gap-3"><span class="rounded-full px-3 py-1 text-xs font-semibold {% if booking.status.value == 'approved' %}bg-emerald-50 text-emerald-700{% elif booking.status.value == 'pending' %}bg-amber-50 text-amber-700{% elif booking.status.value == 'rejected' %}bg-rose-50 text-rose-700{% else %}bg-slate-100 text-slate-600{% endif %}">{{ t(booking.status.value) }}</span>
+          {% if booking.status.value in ("pending", "approved") %}<form action="/participant/bookings/{{ booking.id }}/cancel" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="participant_id" value="{{ participant.id }}"><button class="text-sm font-semibold text-rose-700">{{ t("cancel") }}</button></form>{% endif %}
+        </div>
+      </article>
+    {% else %}<p class="rounded-xl border bg-white p-5 text-slate-500">{{ t("no_bookings") }}</p>{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+{% else %}
+  <section class="max-w-xl rounded-2xl border bg-white p-6 shadow-sm">
+    <h2 class="text-xl font-bold">{{ t("discord_sign_in_title") }}</h2>
+    <p class="mt-2 text-sm text-slate-600">{{ t("discord_sign_in_description") }}</p>
+    {% if discord_oauth_enabled %}
+    <a href="/auth/discord/link" class="mt-5 inline-flex rounded-xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-800">{{ t("discord_sign_in_button") }}</a>
+    {% else %}
+    <p class="mt-4 text-sm text-amber-800">{{ t("discord_role_configuration_needed") }}</p>
+    {% endif %}
+  </section>
+{% endif %}
+{% endblock %}

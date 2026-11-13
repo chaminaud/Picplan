@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-5 flex flex-wrap items-end justify-between gap-4 border-b bg-white p-5 shadow-sm">
+  <div>
+    <p class="text-sm font-semibold uppercase tracking-wider text-indigo-600">{{ t("event_schedule") }}</p>
+    <h1 class="mt-1 text-3xl font-bold text-slate-900">{{ event.title }}</h1>
+    <p class="mt-2 text-sm text-slate-500">{{ event.start_date.strftime("%d/%m/%Y") }} — {{ event.end_date.strftime("%d/%m/%Y") }}</p>
+    {% if participant %}
+      <p class="mt-2 text-xs text-slate-500">{{ t("my_bookings") }}:
+        <span class="font-bold text-indigo-700">{{ participant_booked_count }} / {{ max_slots }}</span>
+        {{ t("slots_used") }}
+      </p>
+    {% endif %}
+  </div>
+  <div class="flex flex-wrap items-center gap-3">
+    <form action="/events/{{ event.id }}" method="get" class="flex flex-wrap items-end gap-2">
+      {% if participant %}<input type="hidden" name="participant_id" value="{{ participant.id }}">{% endif %}
+      <label class="text-xs font-semibold text-slate-600">{{ t("date") }}
+        <select name="selected_date" class="mt-1 rounded-lg border px-3 py-2 text-sm font-normal">
+          {% for day in days %}
+            <option value="{{ day.isoformat() }}" {% if day == selected_date %}selected{% endif %}>{{ day.strftime("%a %d %b") }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button class="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-semibold text-white">{{ t("show_schedule") }}</button>
+    </form>
+    <a href="/participant" class="pb-2 text-sm font-semibold text-indigo-700 hover:underline">← {{ t("participant_area") }}</a>
+  </div>
+</div>
+{% include "partials/schedule_matrix.html" %}
+{% endblock %}

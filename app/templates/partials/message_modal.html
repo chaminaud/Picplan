@@ -1,0 +1,13 @@
+{% if modal_message %}
+<dialog data-auto-message-modal aria-labelledby="message-modal-title" class="w-[calc(100%-2rem)] max-w-lg rounded-2xl border-0 p-0 shadow-2xl backdrop:bg-slate-950/50">
+  <div class="grid gap-5 p-6">
+    <div>
+      <h2 id="message-modal-title" class="text-xl font-bold text-slate-900">{{ t(modal_title) }}</h2>
+      <p class="mt-2 text-sm leading-6 text-slate-600">{{ t(modal_message) }}</p>
+    </div>
+    <form method="dialog" class="justify-self-end">
+      <button class="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-800">{{ t("close") }}</button>
+    </form>
+  </div>
+</dialog>
+{% endif %}

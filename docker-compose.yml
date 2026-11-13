@@ -1,0 +1,36 @@
+services:
+  picplan:
+    build:
+      context: .
+    image: picplan:latest
+    container_name: picplan
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: sqlite:////app/data/picplan.db
+      DEFAULT_LANGUAGE: fr
+      APP_ENV: production
+      APP_SECRET: ${APP_SECRET:?Set APP_SECRET in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
+      DISCORD_REDIRECT_URI: ${DISCORD_REDIRECT_URI:-http://127.0.0.1:8000/auth/discord/callback}
+    ports:
+      - "8000:8000"
+    volumes:
+      - picplan_data:/app/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  picplan_data:

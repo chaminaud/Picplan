@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ t("print_schedule") }} · {{ event.title }}{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-wrap items-end justify-between gap-4 print:hidden"><div><a href="/admin/events/{{ event.id }}/schedule" class="text-sm font-semibold text-indigo-700">← {{ t("manage_schedule") }}</a><h1 class="mt-2 text-2xl font-bold">{{ t("print_schedule") }}</h1></div><div class="flex flex-wrap items-end gap-3"><form method="get" action="/admin/events/{{ event.id }}/print"><label class="text-sm font-semibold">{{ t("sort_by") }}<select name="sort_by" onchange="this.form.submit()" class="mt-1 block rounded-lg border bg-white px-3 py-2 font-normal"><option value="intervener" {% if sort_by == "intervener" %}selected{% endif %}>{{ t("intervener_then_time") }}</option><option value="participant" {% if sort_by == "participant" %}selected{% endif %}>{{ t("participant_then_time") }}</option></select></label></form><button onclick="window.print()" class="rounded-xl bg-indigo-700 px-4 py-2.5 font-semibold text-white">{{ t("print") }}</button></div></div>
+<div class="print-sheet">
+{% for day, slots_for_day in days %}
+<section class="mb-8 break-after-page rounded-2xl border bg-white p-6 print:mb-0 print:rounded-none print:border-0 print:p-0">
+  <div class="mb-5 border-b pb-3"><p class="text-sm font-semibold uppercase tracking-wider text-indigo-600">{{ event.title }}</p><h2 class="mt-1 text-2xl font-bold">{{ day.strftime("%A %d %B %Y") }}</h2></div>
+  {% if slots_for_day %}
+  <table class="w-full border-collapse text-left text-sm"><thead><tr class="border-b text-xs uppercase text-slate-500"><th class="py-2">{{ t("time") }}</th><th>{{ t("intervener") }}</th><th>{{ t("participant") }}</th><th>{{ t("location") }}</th></tr></thead><tbody>
+  {% for slot, booking in slots_for_day %}
+    <tr class="border-b {% if slot.is_lunch_break %}bg-amber-50{% endif %}"><td class="py-3">{{ slot.start_time|format_time(language) }}–{{ slot.end_time|format_time(language) }}</td><td>{{ slot.intervener.name }}</td>{% if slot.is_lunch_break %}<td colspan="2">{{ t("lunch_break") }}</td>{% elif booking %}<td>{{ booking.participant.name }}</td><td>{{ booking.location.name }}</td>{% else %}<td class="text-slate-400">—</td><td>—</td>{% endif %}</tr>
+  {% endfor %}
+  </tbody></table>
+  {% else %}<p class="py-6 text-slate-500">{{ t("no_slots") }}</p>{% endif %}
+</section>
+{% endfor %}
+</div>
+<style>@media print { @page { size: A4; margin: 15mm; } body { background: white; } header, main > div:first-child { display: none !important; } .print-sheet section { break-after: page; } .print-sheet section:last-child { break-after: auto; } }</style>
+{% endblock %}

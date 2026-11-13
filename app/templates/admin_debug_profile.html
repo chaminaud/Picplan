@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mx-auto max-w-2xl">
+  <a href="/admin" class="text-sm font-semibold text-indigo-700">← {{ t("dashboard") }}</a>
+  <h1 class="mb-2 mt-3 text-3xl font-bold">{{ t("debug_profile") }}</h1>
+  <p class="mb-6 text-slate-600">{{ t("debug_profile_description") }}</p>
+  <form action="/admin/debug/profile" method="post" class="grid gap-4 rounded-2xl border bg-white p-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label class="text-sm font-semibold">{{ t("choose_profile") }}
+      <select name="participant_id" required class="mt-1 w-full rounded-lg border px-3 py-2 font-normal">
+        {% for participant in participants %}
+          <option value="{{ participant.id }}" {% if selected_participant_id == participant.id %}selected{% endif %}>{{ participant.participant_type.emoji or "👤" }} {{ participant.name }} · {{ participant.participant_type.name }}</option>
+        {% else %}
+          <option value="">{{ t("no_participants_yet") }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <p class="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{{ t("debug_profile_warning") }}</p>
+    <button {% if not participants %}disabled{% endif %} class="justify-self-start rounded-lg bg-amber-700 px-5 py-2.5 font-semibold text-white disabled:opacity-50">{{ t("become_profile") }}</button>
+  </form>
+  {% if selected_participant_id %}
+    <form action="/admin/debug/profile/stop" method="post" class="mt-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="rounded-lg border bg-white px-5 py-2.5 font-semibold">{{ t("stop_debug_profile") }}</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}
