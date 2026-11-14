@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# This file is part of PicPlan. See COPYING.LESSER and COPYING for license details.
+
 import json
 from datetime import time
 from functools import lru_cache

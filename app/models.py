@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# This file is part of PicPlan. See COPYING.LESSER and COPYING for license details.
+
 from datetime import date, datetime, time, timezone
 from enum import Enum
 

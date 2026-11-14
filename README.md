@@ -146,6 +146,12 @@ The schedule matrix also works on phones:
 
 <img src="docs/screenshots/mobile-schedule.png" alt="Schedule matrix on a phone" width="300">
 
+### License
+
+PicPlan is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version (`LGPL-3.0-or-later`).
+
+PicPlan is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY. See [COPYING.LESSER](./COPYING.LESSER) and [COPYING](./COPYING) (the GNU GPL v3, which the LGPL supplements) for details.
+
 ---
 
 ## Français
@@ -297,3 +303,9 @@ La matrice du planning fonctionne aussi sur téléphone :
 <img src="docs/screenshots/mobile-schedule.png" alt="Matrice du planning sur téléphone" width="300">
 
 Le [manuel utilisateur](./MANUEL-UTILISATEUR.md) contient d’autres captures pour chaque étape.
+
+### Licence
+
+PicPlan est un logiciel libre : vous pouvez le redistribuer et/ou le modifier selon les termes de la GNU Lesser General Public License publiée par la Free Software Foundation, version 3 de la licence ou (à votre choix) toute version ultérieure (`LGPL-3.0-or-later`).
+
+PicPlan est distribué dans l’espoir qu’il sera utile, mais SANS AUCUNE GARANTIE. Consultez [COPYING.LESSER](./COPYING.LESSER) et [COPYING](./COPYING) (la GNU GPL v3, que la LGPL complète) pour plus de détails.
