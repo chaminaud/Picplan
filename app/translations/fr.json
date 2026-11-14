@@ -267,7 +267,7 @@
   "time": "Horaire",
   "until": "au",
   "update": "Mettre à jour",
-  "unsupported_image": "Utilisez une image JPEG, PNG, WebP, JPEG XL ou GIF.",
+  "unsupported_image": "Utilisez une image JPEG, PNG, WebP, JPEG XL, HEIC ou GIF.",
   "uploading_image": "Téléversement en cours…",
   "view_floor_plan": "Voir le plan",
   "view_matrix": "Voir le planning par intervenant",

@@ -3,7 +3,7 @@
      data-error="{{ t('image_upload_error') }}" data-limit-reached="{% if max_items|default(0)|int == 1 %}{{ t('avatar_image_limit_reached') }}{% else %}{{ t('participant_photo_limit_reached') }}{% endif %}"
      data-gallery-label="{{ t('participant_photos') }}" data-remove-label="{{ t('delete') }}"
      data-csrf-token="{{ csrf_token }}">
-  <input class="image-upload-input sr-only" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/jxl" {% if max_items is defined and max_items > 1 %}multiple{% endif %}>
+  <input class="image-upload-input sr-only" type="file" accept="image/*" {% if max_items is defined and max_items > 1 %}multiple{% endif %}>
   <button type="button" class="image-upload-button rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-800 hover:bg-indigo-100">
     {{ t("choose_image") }}
   </button>
