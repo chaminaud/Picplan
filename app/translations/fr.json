@@ -167,7 +167,7 @@
   "participant_name_required": "Le nom du profil est obligatoire.",
   "participant_profile_updated": "Votre profil a été mis à jour.",
   "participant_profile_role_hint": "Vous pouvez modifier vos informations et vos images. Le type et les rôles Discord sont gérés par l'administrateur.",
-  "image_too_large": "Les images doivent faire 8 Mo maximum.",
+  "image_too_large": "Les images doivent faire 20 Mo maximum.",
   "invalid_image": "Le fichier téléversé n'est pas une image valide prise en charge.",
   "language": "Langue",
   "location": "Lieu",

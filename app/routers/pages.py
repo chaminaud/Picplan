@@ -39,7 +39,7 @@ from app.templating import templates
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-MAX_IMAGE_SIZE = 8 * 1024 * 1024
+MAX_IMAGE_SIZE = 20 * 1024 * 1024
 MAX_PARTICIPANT_PHOTOS = 10
 IMAGE_FORMATS = {
     "JPEG": "jpg",

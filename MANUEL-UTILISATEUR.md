@@ -138,7 +138,7 @@ Les messages privés Discord informent les participants des décisions, si leur 
 
 Depuis l’espace participant, cliquez sur votre nom puis sur **Modifier mon profil**. Vous pouvez modifier votre nom, votre identifiant Discord, votre lien social, votre biographie, votre avatar et les photos du mini-book. Le type du profil, l’adresse e-mail et le rôle Discord sont gérés par l’administrateur.
 
-Le mini-book accepte jusqu’à 10 images. Chaque image téléversée peut peser jusqu’à 8 Mo.
+Le mini-book accepte jusqu’à 10 images. Chaque image téléversée peut peser jusqu’à 20 Mo.
 
 ## Résoudre les problèmes courants
 

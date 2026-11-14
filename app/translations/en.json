@@ -167,7 +167,7 @@
   "participant_name_required": "A profile name is required.",
   "participant_profile_updated": "Your profile has been updated.",
   "participant_profile_role_hint": "You can edit your information and images. Your type and Discord roles are managed by the administrator.",
-  "image_too_large": "Images must be 8 MB or smaller.",
+  "image_too_large": "Images must be 20 MB or smaller.",
   "invalid_image": "The uploaded file is not a valid supported image.",
   "language": "Language",
   "location": "Location",

@@ -126,7 +126,7 @@ Docker Compose applies pending migrations automatically at startup.
 - Per-day printable event schedules
 - Slot generation with configurable hours, appointment duration, gaps, and lunch breaks
 - Event-specific participant and intervener assignments
-- Image uploads for avatars, mini-books, location photos, and floor plans (JPEG, PNG, WebP, JPEG XL, or GIF; maximum 8 MB per image)
+- Image uploads for avatars, mini-books, location photos, and floor plans (JPEG, PNG, WebP, JPEG XL, or GIF; maximum 20 MB per image)
 
 ### Screenshots
 
@@ -276,7 +276,7 @@ Docker Compose applique automatiquement les migrations en attente au démarrage.
 - Vue imprimable des plannings, une page par jour
 - Génération de créneaux avec horaires, durée, intervalles et pause déjeuner configurables
 - Association des participants et intervenants à chaque événement
-- Téléversement d’avatars, de mini-books, de photos de lieux et de plans (JPEG, PNG, WebP, JPEG XL ou GIF ; 8 Mo maximum par image)
+- Téléversement d’avatars, de mini-books, de photos de lieux et de plans (JPEG, PNG, WebP, JPEG XL ou GIF ; 20 Mo maximum par image)
 
 ### Captures d’écran
 
