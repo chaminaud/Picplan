@@ -18,7 +18,7 @@ from app.routers.pages import csrf_token, router as pages_router
 from app.settings import settings
 from app.templating import templates
 
-app = FastAPI(title="PicPlan", version="0.9.2")
+app = FastAPI(title="PicPlan", version="0.9.3")
 app.add_middleware(SessionMiddleware, secret_key=settings.app_secret, same_site="lax", https_only=settings.app_env == "production")
 app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 upload_dir = Path(settings.upload_dir)
