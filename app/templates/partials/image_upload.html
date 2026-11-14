@@ -1,6 +1,8 @@
 <div class="image-upload" data-upload-target="{{ target_id }}" data-append="{{ append }}" data-max-items="{{ max_items|default('') }}"
      data-uploading="{{ t('uploading_image') }}" data-success="{{ t('image_uploaded') }}"
      data-error="{{ t('image_upload_error') }}" data-limit-reached="{% if max_items|default(0)|int == 1 %}{{ t('avatar_image_limit_reached') }}{% else %}{{ t('participant_photo_limit_reached') }}{% endif %}"
+     data-limit-title="{{ t('image_limit_title') }}" data-limit-hint="{{ t('image_limit_remove_hint') }}"
+     data-limit-remaining="{{ t('image_limit_remaining') }}" data-ok-label="{{ t('understood') }}"
      data-gallery-label="{{ t('participant_photos') }}" data-remove-label="{{ t('delete') }}"
      data-csrf-token="{{ csrf_token }}">
   <input class="image-upload-input sr-only" type="file" accept="image/*" {% if max_items is defined and max_items > 1 %}multiple{% endif %}>
