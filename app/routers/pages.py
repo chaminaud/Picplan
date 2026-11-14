@@ -11,6 +11,7 @@ import warnings
 
 import httpx
 import pillow_jxl  # noqa: F401
+from pillow_heif import register_heif_opener
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from PIL import Image, ImageOps, UnidentifiedImageError
@@ -37,9 +38,11 @@ from app.models import (
 from app.settings import settings
 from app.templating import templates
 
+register_heif_opener()
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
-MAX_IMAGE_SIZE = 8 * 1024 * 1024
+MAX_IMAGE_SIZE = 20 * 1024 * 1024
 MAX_PARTICIPANT_PHOTOS = 10
 IMAGE_FORMATS = {
     "JPEG": "jpg",
@@ -47,6 +50,7 @@ IMAGE_FORMATS = {
     "WEBP": "webp",
     "GIF": "gif",
     "JXL": "jxl",
+    "HEIF": "heic",
 }
 MAX_IMAGE_DIMENSION = 1024
 JPEG_QUALITY = 70

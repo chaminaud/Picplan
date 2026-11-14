@@ -126,7 +126,25 @@ Docker Compose applies pending migrations automatically at startup.
 - Per-day printable event schedules
 - Slot generation with configurable hours, appointment duration, gaps, and lunch breaks
 - Event-specific participant and intervener assignments
-- Image uploads for avatars, mini-books, location photos, and floor plans (JPEG, PNG, WebP, JPEG XL, or GIF; maximum 8 MB per image)
+- Image uploads for avatars, mini-books, location photos, and floor plans (JPEG, PNG, WebP, JPEG XL, HEIC, or GIF; maximum 20 MB per image)
+
+### Screenshots
+
+Screenshots use demo data. The interface is shown in French, its default language.
+
+**Administrator schedule matrix**: one column per intervener; green slots are confirmed, light blue slots have pending requests, and dark slots are free.
+
+![Administrator schedule matrix](docs/screenshots/admin-schedule.png)
+
+| Booking a slot (participant) | Reviewing requests (intervener) |
+|---|---|
+| ![Participant booking panel](docs/screenshots/participant-booking-panel.png) | ![Intervener review panel](docs/screenshots/intervener-slot-panel.png) |
+| **Administration dashboard** | **Slot generator** |
+| ![Administration dashboard](docs/screenshots/admin-dashboard.png) | ![Slot generator](docs/screenshots/admin-slot-generator.png) |
+
+The schedule matrix also works on phones:
+
+<img src="docs/screenshots/mobile-schedule.png" alt="Schedule matrix on a phone" width="300">
 
 ---
 
@@ -137,6 +155,8 @@ PicPlan est une application de gestion de plannings et de réservations pour des
 Les participants peuvent gérer leur profil, leur avatar et un mini-book de 10 photos maximum. Les intervenants gèrent leurs plannings et les demandes de réservation. Les administrateurs associent les profils aux événements ; une personne connectée ne peut accéder qu’aux événements auxquels son profil est associé.
 
 L’identification est gérée via Discord : le serveur Discord sert à l’authentification et à la vérification des rôles. Le projet est surtout du « vibe coding » : ça marche pour notre usage, mais ce n’est pas un framework produit de qualité industrielle ni une architecture de référence strictement cadrée.
+
+Consultez le [manuel utilisateur en français](./MANUEL-UTILISATEUR.md) pour les consignes détaillées destinées aux administrateurs, participants et intervenants.
 
 ### Démarrage rapide avec Docker Compose
 
@@ -256,4 +276,24 @@ Docker Compose applique automatiquement les migrations en attente au démarrage.
 - Vue imprimable des plannings, une page par jour
 - Génération de créneaux avec horaires, durée, intervalles et pause déjeuner configurables
 - Association des participants et intervenants à chaque événement
-- Téléversement d’avatars, de mini-books, de photos de lieux et de plans (JPEG, PNG, WebP, JPEG XL ou GIF ; 8 Mo maximum par image)
+- Téléversement d’avatars, de mini-books, de photos de lieux et de plans (JPEG, PNG, WebP, JPEG XL, HEIC ou GIF ; 20 Mo maximum par image)
+
+### Captures d’écran
+
+Les captures utilisent des données de démonstration.
+
+**Matrice du planning administrateur** : une colonne par intervenant ; les créneaux verts sont confirmés, les bleu clair ont des demandes en attente et les foncés sont libres.
+
+![Matrice du planning administrateur](docs/screenshots/admin-schedule.png)
+
+| Réserver un créneau (participant) | Traiter les demandes (intervenant) |
+|---|---|
+| ![Panneau de réservation participant](docs/screenshots/participant-booking-panel.png) | ![Panneau de traitement intervenant](docs/screenshots/intervener-slot-panel.png) |
+| **Tableau de bord d’administration** | **Génération de créneaux** |
+| ![Tableau de bord d’administration](docs/screenshots/admin-dashboard.png) | ![Génération de créneaux](docs/screenshots/admin-slot-generator.png) |
+
+La matrice du planning fonctionne aussi sur téléphone :
+
+<img src="docs/screenshots/mobile-schedule.png" alt="Matrice du planning sur téléphone" width="300">
+
+Le [manuel utilisateur](./MANUEL-UTILISATEUR.md) contient d’autres captures pour chaque étape.
