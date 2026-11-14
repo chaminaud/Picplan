@@ -501,6 +501,43 @@ document.addEventListener("htmx:afterSwap", () => {
   schedulePanelTrigger = null;
 });
 
+const showImageLimitModal = (uploader, message) => {
+  let modal = document.querySelector("[data-image-limit-modal]");
+  if (!modal) {
+    modal = document.createElement("dialog");
+    modal.setAttribute("data-image-limit-modal", "");
+    modal.setAttribute("aria-labelledby", "image-limit-title");
+    modal.className = "w-[calc(100%-2rem)] max-w-md rounded-2xl border-0 p-0 shadow-2xl backdrop:bg-slate-950/50";
+    modal.innerHTML = `
+      <div class="grid gap-4 p-6">
+        <div class="flex items-start gap-3">
+          <span aria-hidden="true" class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-amber-100 text-xl">⚠️</span>
+          <div class="grid gap-2">
+            <h2 id="image-limit-title" data-image-limit-title class="text-lg font-bold text-slate-900"></h2>
+            <p data-image-limit-message class="text-sm font-medium text-slate-800"></p>
+            <p data-image-limit-hint class="text-sm text-slate-600"></p>
+          </div>
+        </div>
+        <form method="dialog" class="flex justify-end">
+          <button data-image-limit-ok class="rounded-xl bg-indigo-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-800"></button>
+        </form>
+      </div>`;
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) modal.close();
+    });
+    document.body.append(modal);
+  }
+  modal.querySelector("[data-image-limit-title]").textContent = uploader.dataset.limitTitle || "";
+  modal.querySelector("[data-image-limit-message]").textContent = message;
+  modal.querySelector("[data-image-limit-hint]").textContent = uploader.dataset.limitHint || "";
+  modal.querySelector("[data-image-limit-ok]").textContent = uploader.dataset.okLabel || "OK";
+  if (typeof modal.showModal === "function") {
+    modal.showModal();
+  } else {
+    window.alert(`${message}\n${uploader.dataset.limitHint || ""}`);
+  }
+};
+
 for (const uploader of document.querySelectorAll(".image-upload")) {
   const fileInput = uploader.querySelector(".image-upload-input");
   const chooseButton = uploader.querySelector(".image-upload-button");
@@ -549,12 +586,24 @@ for (const uploader of document.querySelectorAll(".image-upload")) {
     });
   };
 
+  const isLimitReached = () => maxItems > 0 && currentUrls().length >= maxItems;
+
+  const openFilePicker = () => {
+    if (isUploading) return;
+    if (isLimitReached()) {
+      showImageLimitModal(uploader, uploader.dataset.limitReached);
+      return;
+    }
+    fileInput.click();
+  };
+
   const updateUploadControls = () => {
-    const limitReached = maxItems > 0 && currentUrls().length >= maxItems;
-    chooseButton.disabled = isUploading || limitReached;
-    fileInput.disabled = isUploading || limitReached;
+    const limitReached = isLimitReached();
+    chooseButton.disabled = isUploading;
+    fileInput.disabled = isUploading;
+    chooseButton.classList.toggle("opacity-50", limitReached);
     dropZone.setAttribute("aria-disabled", String(isUploading || limitReached));
-    dropZone.classList.toggle("pointer-events-none", isUploading || limitReached);
+    dropZone.classList.toggle("pointer-events-none", isUploading);
     dropZone.classList.toggle("opacity-50", isUploading || limitReached);
     if (limitReached && !isUploading) {
       status.textContent = uploader.dataset.limitReached;
@@ -614,9 +663,10 @@ for (const uploader of document.querySelectorAll(".image-upload")) {
     if (!files.length) return;
     const availableItems = maxItems > 0 ? maxItems - currentUrls().length : files.length;
     if (files.length > availableItems) {
-      status.textContent = uploader.dataset.limitReached;
-      status.classList.remove("text-emerald-700");
-      status.classList.add("text-rose-700");
+      const message = availableItems > 0
+        ? (uploader.dataset.limitRemaining || "").replace("{count}", String(availableItems))
+        : uploader.dataset.limitReached;
+      showImageLimitModal(uploader, message);
       return;
     }
     isUploading = true;
@@ -641,17 +691,17 @@ for (const uploader of document.querySelectorAll(".image-upload")) {
   updateGallery();
   updateUploadControls();
 
-  chooseButton.addEventListener("click", () => fileInput.click());
+  chooseButton.addEventListener("click", openFilePicker);
   fileInput.addEventListener("change", () => {
     const files = Array.from(fileInput.files || []);
     fileInput.value = "";
     uploadFiles(files);
   });
-  dropZone.addEventListener("click", () => fileInput.click());
+  dropZone.addEventListener("click", openFilePicker);
   dropZone.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      fileInput.click();
+      openFilePicker();
     }
   });
   dropZone.tabIndex = 0;
