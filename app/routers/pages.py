@@ -1086,6 +1086,10 @@ def build_schedule_matrix(
                 )
             )
         }
+        rejected_count = sum(
+            booking.status == BookingStatus.REJECTED
+            for booking in slot.bookings
+        )
         booking_details = [
             {
                 "name": booking.participant.name,
@@ -1103,7 +1107,8 @@ def build_schedule_matrix(
                 "can_reject": (
                     booking.status == BookingStatus.PENDING
                     and queue_positions.get(booking.id) == 0
-                    and pending_count > 1
+                    and rejected_count
+                    < max(event.max_pending_bookings_per_slot - 1, 0)
                 ),
                 "avatar_url": booking.participant.avatar_url
                 or (
@@ -1163,7 +1168,10 @@ def build_schedule_matrix(
                 "own_booking_status": own_booking.status.value if own_booking else None,
                 "queue_count": pending_count,
                 "queue_limit": event.max_pending_bookings_per_slot,
-                "remaining_refusals": max(pending_count - 1, 0),
+                "remaining_refusals": max(
+                    event.max_pending_bookings_per_slot - 1 - rejected_count,
+                    0,
+                ),
                 "bookings": booking_details,
                 "review_bookings": can_review,
                 "display_names": ", ".join(item["name"] for item in booking_details),
@@ -1505,7 +1513,6 @@ async def participant_portal(
             "rejection_limit_reached": "booking_action_rejection_limit_reached",
             "approval_conflict": "booking_action_approval_conflict",
             "not_first_in_queue": "booking_action_not_first_in_queue",
-            "cannot_reject_last": "booking_action_cannot_reject_last",
         }.get(request.query_params.get("booking_error", "")),
     }
     if matrix:
@@ -1771,7 +1778,6 @@ async def intervener_dashboard(
         "rejection_limit_reached",
         "approval_conflict",
         "not_first_in_queue",
-        "cannot_reject_last",
     }:
         message = translate(
             language,
@@ -2027,13 +2033,22 @@ async def update_booking_status(
                 .execution_options(synchronize_session="fetch")
             )
     else:
-        if len(pending_bookings) <= 1:
+        rejected_count = db.scalar(
+            select(func.count(Booking.id)).where(
+                Booking.time_slot_id == booking.time_slot_id,
+                Booking.status == BookingStatus.REJECTED,
+            )
+        ) or 0
+        if rejected_count >= max(
+            booking.time_slot.event.max_pending_bookings_per_slot - 1,
+            0,
+        ):
             return booking_action_error_redirect(
                 participant.id,
                 booking.time_slot.event_id,
                 booking.time_slot.date,
                 form,
-                "cannot_reject_last",
+                "rejection_limit_reached",
             )
         rejection_reason = str(form.get("reason", "")).strip()
         if not rejection_reason or len(rejection_reason) > 1000:
