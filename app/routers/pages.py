@@ -1029,7 +1029,7 @@ def build_schedule_matrix(
             and slot.intervener_id == participant.id
         )
         can_view_participant_profile = bool(
-            participant and participant.participant_type.is_intervener
+            participant
         )
         can_book = bool(
             participant
@@ -1063,8 +1063,7 @@ def build_schedule_matrix(
                     booking
                     for booking in slot.bookings
                     if booking.status == BookingStatus.APPROVED
-                    or booking.participant_id == participant.id
-                    and booking.status == BookingStatus.PENDING
+                    or booking.status == BookingStatus.PENDING
                 ]
         else:
             display_bookings = [
@@ -1097,7 +1096,13 @@ def build_schedule_matrix(
                 "status": translate(language, booking.status.value),
                 "status_value": booking.status.value,
                 "location": booking.location.name,
-                "notes": booking.notes or "",
+                "notes": (
+                    booking.notes or ""
+                    if booking.status != BookingStatus.PENDING
+                    or can_review
+                    or (participant and booking.participant_id == participant.id)
+                    else ""
+                ),
                 "booking_id": booking.id,
                 "queue_position": queue_positions.get(booking.id),
                 "can_process": (
