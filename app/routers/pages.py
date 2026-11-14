@@ -1029,7 +1029,7 @@ def build_schedule_matrix(
             and slot.intervener_id == participant.id
         )
         can_view_participant_profile = bool(
-            participant and participant.participant_type.is_intervener
+            participant
         )
         can_book = bool(
             participant
@@ -1063,8 +1063,7 @@ def build_schedule_matrix(
                     booking
                     for booking in slot.bookings
                     if booking.status == BookingStatus.APPROVED
-                    or booking.participant_id == participant.id
-                    and booking.status == BookingStatus.PENDING
+                    or booking.status == BookingStatus.PENDING
                 ]
         else:
             display_bookings = [
@@ -1086,6 +1085,10 @@ def build_schedule_matrix(
                 )
             )
         }
+        rejected_count = sum(
+            booking.status == BookingStatus.REJECTED
+            for booking in slot.bookings
+        )
         booking_details = [
             {
                 "name": booking.participant.name,
@@ -1093,7 +1096,13 @@ def build_schedule_matrix(
                 "status": translate(language, booking.status.value),
                 "status_value": booking.status.value,
                 "location": booking.location.name,
-                "notes": booking.notes or "",
+                "notes": (
+                    booking.notes or ""
+                    if booking.status != BookingStatus.PENDING
+                    or can_review
+                    or (participant and booking.participant_id == participant.id)
+                    else ""
+                ),
                 "booking_id": booking.id,
                 "queue_position": queue_positions.get(booking.id),
                 "can_process": (
@@ -1103,7 +1112,8 @@ def build_schedule_matrix(
                 "can_reject": (
                     booking.status == BookingStatus.PENDING
                     and queue_positions.get(booking.id) == 0
-                    and pending_count > 1
+                    and rejected_count
+                    < max(event.max_pending_bookings_per_slot - 1, 0)
                 ),
                 "avatar_url": booking.participant.avatar_url
                 or (
@@ -1163,7 +1173,10 @@ def build_schedule_matrix(
                 "own_booking_status": own_booking.status.value if own_booking else None,
                 "queue_count": pending_count,
                 "queue_limit": event.max_pending_bookings_per_slot,
-                "remaining_refusals": max(pending_count - 1, 0),
+                "remaining_refusals": max(
+                    event.max_pending_bookings_per_slot - 1 - rejected_count,
+                    0,
+                ),
                 "bookings": booking_details,
                 "review_bookings": can_review,
                 "display_names": ", ".join(item["name"] for item in booking_details),
@@ -1505,7 +1518,6 @@ async def participant_portal(
             "rejection_limit_reached": "booking_action_rejection_limit_reached",
             "approval_conflict": "booking_action_approval_conflict",
             "not_first_in_queue": "booking_action_not_first_in_queue",
-            "cannot_reject_last": "booking_action_cannot_reject_last",
         }.get(request.query_params.get("booking_error", "")),
     }
     if matrix:
@@ -1771,7 +1783,6 @@ async def intervener_dashboard(
         "rejection_limit_reached",
         "approval_conflict",
         "not_first_in_queue",
-        "cannot_reject_last",
     }:
         message = translate(
             language,
@@ -2027,13 +2038,22 @@ async def update_booking_status(
                 .execution_options(synchronize_session="fetch")
             )
     else:
-        if len(pending_bookings) <= 1:
+        rejected_count = db.scalar(
+            select(func.count(Booking.id)).where(
+                Booking.time_slot_id == booking.time_slot_id,
+                Booking.status == BookingStatus.REJECTED,
+            )
+        ) or 0
+        if rejected_count >= max(
+            booking.time_slot.event.max_pending_bookings_per_slot - 1,
+            0,
+        ):
             return booking_action_error_redirect(
                 participant.id,
                 booking.time_slot.event_id,
                 booking.time_slot.date,
                 form,
-                "cannot_reject_last",
+                "rejection_limit_reached",
             )
         rejection_reason = str(form.get("reason", "")).strip()
         if not rejection_reason or len(rejection_reason) > 1000:
@@ -2648,45 +2668,13 @@ async def toggle_event_closed(
 )
 def admin_event_participants(
     event_id: int,
-    request: Request,
     _admin: None = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     event = get_open_event_or_404(db, event_id)
-    participants = db.scalars(
-        select(Participant)
-        .join(ParticipantType)
-        .options(joinedload(Participant.participant_type))
-        .order_by(ParticipantType.name, Participant.name)
-    ).unique().all()
-    assigned_ids = set(
-        db.scalars(
-            select(event_participants.c.participant_id).where(
-                event_participants.c.event_id == event.id
-            )
-        ).all()
-    )
-    assignment_error_key = {
-        "intervener_slots": "remove_intervener_slots_first",
-        "participant_bookings": "cannot_unlink_booked_participant",
-    }.get(request.query_params.get("assignment_error", ""))
-    return render(
-        request,
-        "admin_event_participants.html",
-        {
-            "event": event,
-            "participants": participants,
-            "assigned_ids": assigned_ids,
-            "updated": request.query_params.get("updated") == "1",
-            "assignment_error": (
-                translate(
-                    get_language(request.cookies.get("language")),
-                    assignment_error_key,
-                )
-                if assignment_error_key
-                else None
-            ),
-        },
+    return RedirectResponse(
+        url=f"/admin/events/{event.id}/schedule?manage_participants=1",
+        status_code=303,
     )
 
 
@@ -2704,6 +2692,20 @@ async def update_admin_event_participants(
     event = get_open_event_or_404(db, event_id)
     form = await request.form()
     language = get_language(request.cookies.get("language"))
+    schedule_return_params = {"manage_participants": "1"}
+    selected_date_value = str(form.get("selected_date", "")).strip()
+    if selected_date_value:
+        schedule_return_params["selected_date"] = selected_date_value
+    intervener_value = str(form.get("intervener_id", "")).strip()
+    if intervener_value.isdigit():
+        schedule_return_params["intervener_id"] = intervener_value
+
+    def schedule_return_url(**params: str) -> str:
+        return (
+            f"/admin/events/{event.id}/schedule?"
+            f"{urlencode(schedule_return_params | params)}"
+        )
+
     raw_ids = form.getlist("participant_ids")
     try:
         participant_ids = [int(value) for value in raw_ids]
@@ -2764,7 +2766,9 @@ async def update_admin_event_participants(
                 )
                 if has_slots is not None:
                     return RedirectResponse(
-                        url=f"/admin/events/{event.id}/participants?assignment_error=intervener_slots",
+                        url=schedule_return_url(
+                            assignment_error="intervener_slots"
+                        ),
                         status_code=303,
                     )
             has_bookings = db.scalar(
@@ -2778,14 +2782,18 @@ async def update_admin_event_participants(
             )
             if has_bookings is not None:
                 return RedirectResponse(
-                    url=f"/admin/events/{event.id}/participants?assignment_error=participant_bookings",
+                    url=schedule_return_url(
+                        assignment_error="participant_bookings"
+                    ),
                     status_code=303,
                 )
 
     event.participants = participants
     db.commit()
+    if intervener_value.isdigit() and int(intervener_value) not in set(participant_ids):
+        schedule_return_params.pop("intervener_id", None)
     return RedirectResponse(
-        url=f"/admin/events/{event.id}/participants?updated=1",
+        url=schedule_return_url(updated="1"),
         status_code=303,
     )
 
@@ -2993,6 +3001,11 @@ def admin_participants(request: Request, _admin: None = Depends(require_admin), 
         .order_by(func.lower(Participant.name), Participant.name, Participant.id)
     ).unique().all()
     types = db.scalars(select(ParticipantType).order_by(ParticipantType.name)).all()
+    events = db.scalars(
+        select(Event)
+        .where(Event.is_closed.is_(False))
+        .order_by(Event.start_date, Event.title, Event.id)
+    ).all()
     participant_form_message = {
         "email_in_use": "participant_email_already_in_use",
     }.get(request.query_params.get("participant_error", ""))
@@ -3002,6 +3015,7 @@ def admin_participants(request: Request, _admin: None = Depends(require_admin), 
         {
             "participants": participants,
             "types": types,
+            "events": events,
             "participant_form_message": participant_form_message,
         },
     )
@@ -3018,6 +3032,12 @@ async def create_participant(
     type_id = form_int(form.get("type_id"), "participant type")
     if db.get(ParticipantType, type_id) is None:
         raise HTTPException(status_code=404, detail="Participant type not found.")
+    event_value = str(form.get("event_id", "")).strip()
+    event = (
+        get_open_event_or_404(db, form_int(event_value, "event"))
+        if event_value
+        else None
+    )
     name = str(form.get("name", "")).strip()
     if not name:
         raise HTTPException(status_code=400, detail="Participant name is required.")
@@ -3036,6 +3056,8 @@ async def create_participant(
         social_url=str(form.get("social_url", "")).strip() or None,
         avatar_url=str(form.get("avatar_url", "")).strip() or None,
     )
+    if event:
+        participant.events.append(event)
     participant.photos = [
         ParticipantPhoto(photo_url=url)
         for url in participant_photo_urls(
@@ -3187,6 +3209,23 @@ def admin_schedule(
         )
         .order_by(Participant.name)
     ).unique().all()
+    participants = db.scalars(
+        select(Participant)
+        .join(ParticipantType)
+        .options(joinedload(Participant.participant_type))
+        .order_by(ParticipantType.name, Participant.name)
+    ).unique().all()
+    assigned_ids = set(
+        db.scalars(
+            select(event_participants.c.participant_id).where(
+                event_participants.c.event_id == event.id
+            )
+        ).all()
+    )
+    assignment_error_key = {
+        "intervener_slots": "remove_intervener_slots_first",
+        "participant_bookings": "cannot_unlink_booked_participant",
+    }.get(request.query_params.get("assignment_error", ""))
     matrix = build_schedule_matrix(
         request=request,
         db=db,
@@ -3196,15 +3235,26 @@ def admin_schedule(
         include_all_interveners=True,
         filter_intervener_id=selected_intervener_id,
     )
-    context = {
+    context = matrix | {
         "event": event,
         "interveners": interveners,
         "selected_date": selected_date,
         "selected_intervener_id": selected_intervener_id,
         "matrix": matrix,
         "generated": request.query_params.get("generated"),
+        "participants": participants,
+        "assigned_ids": assigned_ids,
+        "manage_participants": request.query_params.get("manage_participants") == "1",
+        "participants_updated": request.query_params.get("updated") == "1",
+        "assignment_error": (
+            translate(
+                get_language(request.cookies.get("language")),
+                assignment_error_key,
+            )
+            if assignment_error_key
+            else None
+        ),
     }
-    context.update(matrix)
     return render(request, "admin_schedule.html", context)
 
 

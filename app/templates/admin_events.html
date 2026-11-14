@@ -21,7 +21,7 @@
     <div class="flex flex-wrap gap-2">
       <a class="rounded-lg border px-3 py-2 text-sm font-semibold" href="/admin/events/{{ event.id }}/edit">{{ t("edit") }}</a>
       {% if not event.is_closed %}
-      <a class="rounded-lg border px-3 py-2 text-sm font-semibold" href="/admin/events/{{ event.id }}/participants">{{ t("manage_event_participants") }}</a>
+      <a class="rounded-lg border px-3 py-2 text-sm font-semibold" href="/admin/events/{{ event.id }}/schedule?manage_participants=1">{{ t("manage_event_participants") }}</a>
       <a class="rounded-lg border px-3 py-2 text-sm font-semibold" href="/admin/events/{{ event.id }}/schedule">{{ t("manage_schedule") }}</a>
       <a class="rounded-lg border px-3 py-2 text-sm font-semibold" href="/admin/events/{{ event.id }}/print">{{ t("print") }}</a>
       {% endif %}

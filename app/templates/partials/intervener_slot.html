@@ -1,6 +1,7 @@
 <section id="intervener-slot-{{ slot.id }}" class="rounded-2xl border bg-white p-5 shadow-sm">
   {% set pending_count = slot.bookings|selectattr("status.value", "equalto", "pending")|list|length %}
   {% set pending_bookings = slot.bookings|selectattr("status.value", "equalto", "pending")|list %}
+  {% set rejected_count = slot.bookings|selectattr("status.value", "equalto", "rejected")|list|length %}
   {% set has_approved_booking = slot.bookings|selectattr("status.value", "equalto", "approved")|list|length > 0 %}
   <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
     <div>
@@ -8,7 +9,7 @@
       <p class="mt-1 text-sm text-slate-600">{{ slot.date.strftime("%d/%m/%Y") }} · {{ slot.start_time|format_time(language) }}–{{ slot.end_time|format_time(language) }}</p>
     </div>
     <div class="flex flex-wrap gap-2">
-      {% if not has_approved_booking %}<span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">{{ t("refusals_remaining") }} : {{ [pending_count - 1, 0]|max }}</span>{% endif %}
+      {% if not has_approved_booking %}<span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">{{ t("refusals_remaining") }} : {{ [slot.event.max_pending_bookings_per_slot - 1 - rejected_count, 0]|max }}</span>{% endif %}
     </div>
   </div>
   {% if pending_count > 0 %}<p class="mb-3 text-xs text-slate-500">{{ t("booking_queue_priority_hint") }}</p>{% endif %}
@@ -16,7 +17,7 @@
     {% for booking in pending_bookings %}
       {% set participant = booking.participant %}
       {% set can_approve_booking = loop.first %}
-      {% set can_reject_booking = loop.first and pending_count > 1 %}
+      {% set can_reject_booking = loop.first and rejected_count < [slot.event.max_pending_bookings_per_slot - 1, 0]|max %}
       {% set status_only = false %}
       {% include "partials/booking_row.html" %}
     {% endfor %}

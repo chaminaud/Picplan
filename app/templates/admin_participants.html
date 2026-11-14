@@ -6,6 +6,7 @@
 <form action="/admin/participants" method="post" class="mb-8 grid gap-4 rounded-2xl border bg-white p-5 md:grid-cols-2"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   <label class="text-sm font-semibold">{{ t("name") }}<input name="name" required class="mt-1 w-full rounded-lg border px-3 py-2"></label>
   <label class="text-sm font-semibold">{{ t("participant_type") }}<select name="type_id" required {% if not types %}disabled{% endif %} class="mt-1 w-full rounded-lg border px-3 py-2">{% for item in types %}<option value="{{ item.id }}">{{ item.emoji or "👤" }} {{ item.name }}</option>{% endfor %}</select></label>
+  <label class="text-sm font-semibold">{{ t("event") }}<select name="event_id" class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">{{ t("no_event") }}</option>{% for event in events %}<option value="{{ event.id }}">{{ event.title }}</option>{% endfor %}</select></label>
   <label class="text-sm font-semibold">{{ t("email") }}<input name="email" type="email" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
   <label class="text-sm font-semibold">{{ t("discord_handle") }}<input name="discord_handle" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
   <label class="text-sm font-semibold">{{ t("social_url") }}<input name="social_url" type="url" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
