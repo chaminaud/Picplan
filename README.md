@@ -209,6 +209,13 @@ sudo docker load -i /tmp/picplan.tar
 sudo docker compose up -d --force-recreate picplan
 sudo docker compose logs -f picplan
 ```
+ou 
+
+```
+sudo docker load -i /tmp/picplan.tar
+sudo docker tag picplan:latest localhost:5000/picplan:latest
+sudo docker push localhost:5000/picplan:latest
+``` 
 
 Si vous utilisez un registre au lieu d’une archive, gardez un nom d’image stable et vérifiez que `docker-compose.yml` pointe vers l’image construite sans section `build:` locale.
 
