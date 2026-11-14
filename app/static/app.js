@@ -9,9 +9,31 @@ document.addEventListener("DOMContentLoaded", () => {
       modal.setAttribute("open", "");
     }
   }
+  const participantsModal = document.querySelector("[data-auto-event-participants]");
+  if (participantsModal && typeof participantsModal.showModal === "function") {
+    participantsModal.showModal();
+  }
 });
 
 document.addEventListener("click", (event) => {
+  const openParticipantsButton = event.target.closest("[data-open-event-participants]");
+  if (openParticipantsButton) {
+    document.querySelector("[data-event-participants-modal]")?.showModal();
+    return;
+  }
+
+  const closeParticipantsButton = event.target.closest("[data-close-event-participants]");
+  if (closeParticipantsButton) {
+    closeParticipantsButton.closest("[data-event-participants-modal]")?.close();
+    return;
+  }
+
+  const participantsModal = event.target.closest("[data-event-participants-modal]");
+  if (participantsModal && event.target === participantsModal) {
+    participantsModal.close();
+    return;
+  }
+
   const openGeneratorButton = event.target.closest("[data-open-slot-generator]");
   if (openGeneratorButton) {
     document.querySelector("[data-slot-generator-modal]")?.showModal();

@@ -2668,45 +2668,13 @@ async def toggle_event_closed(
 )
 def admin_event_participants(
     event_id: int,
-    request: Request,
     _admin: None = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     event = get_open_event_or_404(db, event_id)
-    participants = db.scalars(
-        select(Participant)
-        .join(ParticipantType)
-        .options(joinedload(Participant.participant_type))
-        .order_by(ParticipantType.name, Participant.name)
-    ).unique().all()
-    assigned_ids = set(
-        db.scalars(
-            select(event_participants.c.participant_id).where(
-                event_participants.c.event_id == event.id
-            )
-        ).all()
-    )
-    assignment_error_key = {
-        "intervener_slots": "remove_intervener_slots_first",
-        "participant_bookings": "cannot_unlink_booked_participant",
-    }.get(request.query_params.get("assignment_error", ""))
-    return render(
-        request,
-        "admin_event_participants.html",
-        {
-            "event": event,
-            "participants": participants,
-            "assigned_ids": assigned_ids,
-            "updated": request.query_params.get("updated") == "1",
-            "assignment_error": (
-                translate(
-                    get_language(request.cookies.get("language")),
-                    assignment_error_key,
-                )
-                if assignment_error_key
-                else None
-            ),
-        },
+    return RedirectResponse(
+        url=f"/admin/events/{event.id}/schedule?manage_participants=1",
+        status_code=303,
     )
 
 
@@ -2724,6 +2692,20 @@ async def update_admin_event_participants(
     event = get_open_event_or_404(db, event_id)
     form = await request.form()
     language = get_language(request.cookies.get("language"))
+    schedule_return_params = {"manage_participants": "1"}
+    selected_date_value = str(form.get("selected_date", "")).strip()
+    if selected_date_value:
+        schedule_return_params["selected_date"] = selected_date_value
+    intervener_value = str(form.get("intervener_id", "")).strip()
+    if intervener_value.isdigit():
+        schedule_return_params["intervener_id"] = intervener_value
+
+    def schedule_return_url(**params: str) -> str:
+        return (
+            f"/admin/events/{event.id}/schedule?"
+            f"{urlencode(schedule_return_params | params)}"
+        )
+
     raw_ids = form.getlist("participant_ids")
     try:
         participant_ids = [int(value) for value in raw_ids]
@@ -2784,7 +2766,9 @@ async def update_admin_event_participants(
                 )
                 if has_slots is not None:
                     return RedirectResponse(
-                        url=f"/admin/events/{event.id}/participants?assignment_error=intervener_slots",
+                        url=schedule_return_url(
+                            assignment_error="intervener_slots"
+                        ),
                         status_code=303,
                     )
             has_bookings = db.scalar(
@@ -2798,14 +2782,18 @@ async def update_admin_event_participants(
             )
             if has_bookings is not None:
                 return RedirectResponse(
-                    url=f"/admin/events/{event.id}/participants?assignment_error=participant_bookings",
+                    url=schedule_return_url(
+                        assignment_error="participant_bookings"
+                    ),
                     status_code=303,
                 )
 
     event.participants = participants
     db.commit()
+    if intervener_value.isdigit() and int(intervener_value) not in set(participant_ids):
+        schedule_return_params.pop("intervener_id", None)
     return RedirectResponse(
-        url=f"/admin/events/{event.id}/participants?updated=1",
+        url=schedule_return_url(updated="1"),
         status_code=303,
     )
 
@@ -3221,6 +3209,23 @@ def admin_schedule(
         )
         .order_by(Participant.name)
     ).unique().all()
+    participants = db.scalars(
+        select(Participant)
+        .join(ParticipantType)
+        .options(joinedload(Participant.participant_type))
+        .order_by(ParticipantType.name, Participant.name)
+    ).unique().all()
+    assigned_ids = set(
+        db.scalars(
+            select(event_participants.c.participant_id).where(
+                event_participants.c.event_id == event.id
+            )
+        ).all()
+    )
+    assignment_error_key = {
+        "intervener_slots": "remove_intervener_slots_first",
+        "participant_bookings": "cannot_unlink_booked_participant",
+    }.get(request.query_params.get("assignment_error", ""))
     matrix = build_schedule_matrix(
         request=request,
         db=db,
@@ -3230,15 +3235,26 @@ def admin_schedule(
         include_all_interveners=True,
         filter_intervener_id=selected_intervener_id,
     )
-    context = {
+    context = matrix | {
         "event": event,
         "interveners": interveners,
         "selected_date": selected_date,
         "selected_intervener_id": selected_intervener_id,
         "matrix": matrix,
         "generated": request.query_params.get("generated"),
+        "participants": participants,
+        "assigned_ids": assigned_ids,
+        "manage_participants": request.query_params.get("manage_participants") == "1",
+        "participants_updated": request.query_params.get("updated") == "1",
+        "assignment_error": (
+            translate(
+                get_language(request.cookies.get("language")),
+                assignment_error_key,
+            )
+            if assignment_error_key
+            else None
+        ),
     }
-    context.update(matrix)
     return render(request, "admin_schedule.html", context)
 
 

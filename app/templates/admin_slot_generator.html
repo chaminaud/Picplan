@@ -54,7 +54,7 @@
     <div class="flex flex-wrap items-center gap-3 md:col-span-2">
       <button {% if not events or not interveners %}disabled{% endif %} class="rounded-xl bg-indigo-700 px-5 py-3 font-semibold text-white hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-50">{{ t("generate_slots") }}</button>
       <a href="{% if selected_event %}/admin/events/{{ selected_event.id }}/schedule{% else %}/admin{% endif %}" class="rounded-xl border px-5 py-3 text-sm font-semibold">{{ t("cancel") }}</a>
-      {% if not interveners %}<span class="text-sm text-amber-800">{{ t("assign_intervener_to_event") }} <a class="font-semibold underline" href="{% if selected_event %}/admin/events/{{ selected_event.id }}/participants{% else %}/admin/events{% endif %}">{{ t("manage_event_participants") }}</a></span>{% endif %}
+      {% if not interveners %}<span class="text-sm text-amber-800">{{ t("assign_intervener_to_event") }} <a class="font-semibold underline" href="{% if selected_event %}/admin/events/{{ selected_event.id }}/schedule?manage_participants=1{% else %}/admin/events{% endif %}">{{ t("manage_event_participants") }}</a></span>{% endif %}
     </div>
   </form>
 </div>
