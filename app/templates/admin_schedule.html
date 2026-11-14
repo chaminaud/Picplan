@@ -1,19 +1,20 @@
 {% extends "base.html" %}
+{% block main_class %}max-w-[120rem] px-2 py-6 sm:px-5 sm:py-10{% endblock %}
 {% block content %}
-<div class="mb-7"><a href="/admin/events" class="text-sm font-semibold text-indigo-700">← {{ t("manage_events") }}</a><div class="mt-3 flex flex-wrap items-end justify-between gap-4"><div><p class="text-sm font-semibold uppercase tracking-wider text-indigo-600">{{ t("manage_schedule") }}</p><h1 class="mt-1 text-3xl font-bold">{{ event.title }}</h1></div><div class="flex flex-wrap gap-2"><button type="button" data-open-event-participants class="rounded-xl border px-4 py-2.5 text-sm font-semibold">{{ t("manage_event_participants") }}</button><button type="button" data-open-create-slot data-panel-title="{{ t('add_time_slot') }}" {% if not interveners %}disabled{% endif %} class="rounded-xl bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{{ t("add_time_slot") }} +</button><a class="rounded-xl border px-4 py-2.5 text-sm font-semibold" href="/admin/slots/create?event_id={{ event.id }}">{{ t("create_booking_slots") }} +</a><a class="rounded-xl border bg-white px-4 py-2.5 text-sm font-semibold" href="/admin/events/{{ event.id }}/print">{{ t("print_schedule") }} ↗</a></div></div></div>
+<div class="mb-7 px-2 sm:px-0"><a href="/admin/events" class="text-sm font-semibold text-indigo-700">← {{ t("manage_events") }}</a><div class="mt-3 flex flex-wrap items-end justify-between gap-4"><div><p class="text-sm font-semibold uppercase tracking-wider text-indigo-600">{{ t("manage_schedule") }}</p><h1 class="mt-1 text-2xl font-bold sm:text-3xl">{{ event.title }}</h1></div><div class="flex flex-wrap gap-2"><button type="button" data-open-event-participants class="rounded-xl border px-4 py-2.5 text-sm font-semibold">{{ t("manage_event_participants") }}</button><button type="button" data-open-create-slot data-panel-title="{{ t('add_time_slot') }}" {% if not interveners %}disabled{% endif %} class="rounded-xl bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{{ t("add_time_slot") }} +</button><a class="rounded-xl border px-4 py-2.5 text-sm font-semibold" href="/admin/slots/create?event_id={{ event.id }}">{{ t("create_booking_slots") }} +</a><a class="rounded-xl border bg-white px-4 py-2.5 text-sm font-semibold" href="/admin/events/{{ event.id }}/print">{{ t("print_schedule") }} ↗</a></div></div></div>
 {% if not interveners %}<p class="mb-5 text-sm text-amber-800">{{ t("assign_intervener_to_event") }} <button type="button" data-open-event-participants class="font-semibold underline">{{ t("manage_event_participants") }}</button></p>{% endif %}
 {% if generated %}<p class="mb-5 rounded-xl bg-emerald-50 p-4 text-sm font-medium text-emerald-800">{{ t("slots_generated_success").format(count=generated) }}</p>{% endif %}
-<section class="mb-8 rounded-2xl border bg-white p-5 shadow-sm">
+<section class="mb-8 rounded-2xl border bg-white p-3 shadow-sm sm:p-5">
   <div class="mb-4 flex flex-wrap items-end justify-between gap-4">
     <div><h2 class="text-xl font-bold">{{ t("schedule_matrix") }}</h2><p class="mt-1 text-sm text-slate-500">{{ t("admin_schedule_matrix_hint") }}</p></div>
-    <form action="/admin/events/{{ event.id }}/schedule" method="get" class="flex flex-wrap items-end gap-3">
+    <form action="/admin/events/{{ event.id }}/schedule" method="get" class="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto sm:flex-wrap sm:items-end">
       <label class="text-sm font-semibold">{{ t("date") }}
-        <select name="selected_date" onchange="this.form.submit()" class="mt-1 rounded-lg border px-3 py-2 font-normal">
+        <select name="selected_date" onchange="this.form.submit()" class="mt-1 block w-full rounded-lg border px-3 py-2 font-normal sm:w-auto">
           {% for day in matrix.days %}<option value="{{ day.isoformat() }}" {% if day == selected_date %}selected{% endif %}>{{ day.strftime("%a %d %b %Y") }}</option>{% endfor %}
         </select>
       </label>
       <label class="text-sm font-semibold">{{ t("intervener") }}
-        <select name="intervener_id" onchange="this.form.submit()" class="mt-1 rounded-lg border px-3 py-2 font-normal">
+        <select name="intervener_id" onchange="this.form.submit()" class="mt-1 block w-full rounded-lg border px-3 py-2 font-normal sm:w-auto">
           <option value="">{{ t("all_interveners") }}</option>
           {% for person in interveners %}<option value="{{ person.id }}" {% if person.id == selected_intervener_id %}selected{% endif %}>{{ person.name }}</option>{% endfor %}
         </select>

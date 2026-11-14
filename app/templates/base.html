@@ -56,7 +56,7 @@
       </div>
     </div>
   {% endif %}
-  <main class="mx-auto max-w-7xl px-5 py-10">
+  <main class="mx-auto {% block main_class %}max-w-7xl px-5 py-10{% endblock %}">
     {% block content %}{% endblock %}
   </main>
   {% block scripts %}{% endblock %}

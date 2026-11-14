@@ -1,16 +1,16 @@
-<div id="{{ matrix_id }}" data-schedule-matrix data-event-id="{{ event.id }}" data-schedule-scope="{{ schedule_scope|default('all') }}" data-selected-date="{{ selected_date.isoformat() }}" data-refusals-remaining-label="{{ t('refusals_remaining') }}" data-queue-priority-label="{{ t('booking_queue_priority_hint') }}" data-queue-waiting-label="{{ t('booking_queue_waiting') }}" data-no-bookings-label="{{ t('no_bookings') }}" data-no-requests-label="{{ t('no_requests') }}" data-lunch-label="{{ t('lunch_break') }}" data-approve-label="{{ t('approve') }}" data-reject-label="{{ t('reject') }}" data-social-label="{{ t('social_url') }}" data-email-label="{{ t('email') }}" data-profile-photos-label="{{ t('participant_photos') }}" data-csrf-token="{{ csrf_token }}" class="mx-auto max-w-[95%] overflow-visible rounded-xl border border-slate-200 bg-white shadow-sm">
+<div id="{{ matrix_id }}" data-schedule-matrix data-event-id="{{ event.id }}" data-schedule-scope="{{ schedule_scope|default('all') }}" data-selected-date="{{ selected_date.isoformat() }}" data-refusals-remaining-label="{{ t('refusals_remaining') }}" data-queue-priority-label="{{ t('booking_queue_priority_hint') }}" data-queue-waiting-label="{{ t('booking_queue_waiting') }}" data-no-bookings-label="{{ t('no_bookings') }}" data-no-requests-label="{{ t('no_requests') }}" data-lunch-label="{{ t('lunch_break') }}" data-approve-label="{{ t('approve') }}" data-reject-label="{{ t('reject') }}" data-social-label="{{ t('social_url') }}" data-email-label="{{ t('email') }}" data-profile-photos-label="{{ t('participant_photos') }}" data-csrf-token="{{ csrf_token }}" class="w-full overflow-visible rounded-xl border border-slate-200 bg-white shadow-sm">
   {% if matrix_error %}
     <p role="alert" class="m-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm font-medium text-rose-800">{{ matrix_error }}</p>
   {% endif %}
-  <div class="overflow-x-auto">
+  <div class="max-h-[calc(100dvh-7rem)] overflow-auto overscroll-contain rounded-xl [--sm-time-col:3rem] [--sm-slot-col:6.5rem] sm:[--sm-time-col:3.5rem] sm:[--sm-slot-col:8rem] xl:[--sm-time-col:4rem] xl:[--sm-slot-col:9rem]">
     <div class="grid min-w-max"
-         style="grid-template-columns: 4.5rem repeat({{ grid_column_count }}, minmax(190px, 1fr)); grid-template-rows: 2.75rem{% if grid_row_count %} repeat({{ grid_row_count }}, 8px){% endif %};">
+         style="grid-template-columns: var(--sm-time-col) repeat({{ grid_column_count }}, minmax(var(--sm-slot-col), 1fr)); grid-template-rows: 2.75rem{% if grid_row_count %} repeat({{ grid_row_count }}, 10px){% endif %};">
       <div class="sticky left-0 top-0 z-30 flex items-center justify-center border-b border-r border-slate-400 bg-slate-800 font-bold text-white" style="grid-column: 1; grid-row: 1;">🕒</div>
       {% for intervener in interveners %}
         <button type="button" data-open-intervener-profile="{{ intervener.id }}"
                 aria-label="{{ t('view_intervener_profile') }}: {{ intervener.name }}"
                 title="{{ t('view_intervener_profile') }}"
-                class="sticky top-0 z-20 flex items-center justify-center border-b border-r border-slate-400 bg-slate-800 px-2 text-center text-xs font-bold text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-400"
+                class="sticky top-0 z-20 flex items-center justify-center overflow-hidden border-b border-r border-slate-400 bg-slate-800 px-1 text-center text-[11px] font-bold leading-tight text-white hover:bg-slate-700 sm:px-2 sm:text-xs focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-400"
                 style="grid-column: {{ loop.index + 1 }}; grid-row: 1;">
           {{ intervener.participant_type.emoji or "🎨" }} {{ intervener.name }}
         </button>
@@ -29,7 +29,7 @@
       {% endfor %}
 
       {% for hour in hour_labels %}
-        <div class="sticky left-0 z-20 flex items-start justify-center border-r-2 border-slate-300 bg-slate-50 pt-0.5 font-mono text-sm font-bold leading-tight text-slate-800" style="grid-column: 1; grid-row: {{ hour.row_start }} / span {{ hour.row_span }};">{{ hour.time }}</div>
+        <div class="sticky left-0 z-20 flex items-start justify-center border-r-2 border-slate-300 bg-slate-50 pt-0.5 font-mono text-xs font-bold sm:text-sm leading-tight text-slate-800" style="grid-column: 1; grid-row: {{ hour.row_start }} / span {{ hour.row_span }};">{{ hour.time }}</div>
       {% endfor %}
 
       {% for slot in grid_slots %}
@@ -37,18 +37,22 @@
         <button type="button" data-open-schedule-slot="{{ slot.id }}"
                 aria-label="{% if slot.is_lunch_break %}{{ t('lunch_break') }} · {% endif %}{{ slot.display_start }}–{{ slot.display_end }}{% if slot.display_names %} · {{ slot.display_names }}{% endif %}{% if slot.display_locations %} · {{ slot.display_locations }}{% endif %}"
                 title="{% if slot.is_lunch_break %}{{ t('lunch_break') }} · {% endif %}{{ slot.display_start }}–{{ slot.display_end }}{% if slot.display_names %} · {{ slot.display_names }}{% endif %}{% if slot.display_locations %} · 📍 {{ slot.display_locations }}{% endif %}"
-                class="relative z-10 m-px min-h-0 min-w-0 overflow-hidden rounded text-left text-[9px] leading-[10px] shadow-sm transition hover:z-20 hover:brightness-95 focus:z-20 focus:outline-none focus:ring-2 focus:ring-indigo-500
+                class="relative z-10 mx-px mt-px mb-0 min-h-0 min-w-0 overflow-hidden rounded text-left text-[9px] leading-[10px] shadow-sm transition hover:z-20 hover:brightness-95 focus:z-20 focus:outline-none focus:ring-2 focus:ring-indigo-500
                   {% if slot.is_lunch_break %}bg-amber-100 text-amber-950 ring-1 ring-inset ring-amber-400
                   {% elif is_booked == 'approved' or slot.has_approved_booking %}bg-emerald-600 text-white ring-1 ring-inset ring-emerald-800
                   {% elif is_booked %}bg-blue-600 text-white ring-1 ring-inset ring-blue-800
                   {% elif slot.bookings %}bg-indigo-100 text-indigo-950 ring-1 ring-inset ring-indigo-300
                   {% else %}bg-slate-600 text-white ring-1 ring-inset ring-slate-700{% endif %}"
                 style="grid-column: {{ slot.column }}; grid-row: {{ slot.row_start }} / span {{ slot.row_span }};">
-          <span class="absolute left-1 top-0 block max-w-[calc(100%-0.5rem)] truncate p-[3px] text-left font-semibold">{{ slot.display_start }}–{{ slot.display_end }}</span>
+          <span class="absolute left-1 top-0 block max-w-[calc(100%-0.5rem)] truncate p-[3px] text-left text-[11px] leading-[12px]">{{ slot.display_start }}–{{ slot.display_end }}</span>
           {% if slot.is_lunch_break %}
-            <span class="block truncate px-1 text-center text-[15px] font-semibold leading-tight">{{ t("lunch_break") }}</span>
+            <span class="block truncate px-1 text-center text-[13px] font-semibold leading-tight sm:text-[15px]">{{ t("lunch_break") }}</span>
           {% elif slot.display_names or slot.display_locations %}
-            <span class="block truncate px-1 text-[15px] leading-tight">{% if slot.display_names %}{{ slot.display_names }}{% endif %}{% if slot.display_locations %}{% if slot.display_names %} · {% endif %}📍 {{ slot.display_locations }}{% endif %}</span>
+            {% if slot.display_names %}
+              {% set is_light_slot = not (is_booked == 'approved' or slot.has_approved_booking or is_booked) and slot.bookings %}
+              <span class="mx-1 mt-3 inline-block max-w-[calc(100%-0.5rem)] truncate rounded-md px-1 py-0.5 align-top text-[14px] font-semibold leading-tight sm:text-[13px] {% if is_light_slot %}bg-white/80 {% else %}bg-white/20{% endif %}">{{ slot.display_names }}</span>
+            {% endif %}
+            {% if slot.display_locations %}<span class="block truncate px-2 text-[12px] leading-tight opacity-90 sm:text-xs">📍 {{ slot.display_locations }}</span>{% endif %}
           {% endif %}
         </button>
       {% endfor %}
