@@ -15,10 +15,12 @@ Ce manuel décrit les principales opérations dans PicPlan pour les administrate
 
 ## Accéder à PicPlan
 
-Ouvrez l’adresse de PicPlan fournie par votre organisation.
+Ouvrez l’adresse de PicPlan fournie par votre organisation. La page d’accueil présente les événements à venir et propose de se connecter.
 
-- **Administrateur** : ouvrez **Administration**, puis connectez-vous avec le mot de passe administrateur.
-- **Participant ou intervenant** : ouvrez **Espace participant**, puis choisissez **Se connecter avec Discord**. L’adresse e-mail vérifiée du compte Discord doit correspondre à celle enregistrée sur votre profil PicPlan. Le compte doit également posséder le rôle Discord configuré pour son type de profil.
+![Page d’accueil et de connexion](docs/screenshots/home-login.png)
+
+- **Administrateur** : cliquez sur **Connexion administrateur** en haut de la page, puis connectez-vous avec le mot de passe administrateur.
+- **Participant ou intervenant** : cliquez sur **Se connecter avec Discord** sur la page d’accueil (ou ouvrez **Espace participant**). L’adresse e-mail vérifiée du compte Discord doit correspondre à celle enregistrée sur votre profil PicPlan. Le compte doit également posséder le rôle Discord configuré pour son type de profil.
 
 Après connexion, un profil ne peut accéder qu’aux événements auxquels l’administrateur l’a associé.
 
