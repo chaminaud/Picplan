@@ -111,6 +111,7 @@
   "discord_booking_approved": "Votre demande de créneau a été acceptée.\nÉvénement : {event}\nDate : {date}, de {start} à {end}\nAccéder à votre espace participant : {participant_area_url}",
   "discord_booking_rejected": "Votre demande de créneau a été refusée.\nÉvénement : {event}\nDate : {date}, de {start} à {end}\nMotif : {reason}",
   "discord_booking_rejected_after_queue_approval_reason": "La personne devant vous, {participant}, a été validée. Votre demande est donc refusée.",
+  "discord_booking_location_changed": "Le lieu d’un créneau a été modifié.\nÉvénement : {event}\nModifié par : {changed_by}\nDate : {date}, de {start} à {end}\nAncien lieu : {previous_location}\nNouveau lieu : {location}\nAccéder à l’espace participant : {participant_area_url}",
   "discord_member_required": "Votre compte Discord doit être membre du serveur associé à PicPlan.",
   "discord_role_not_configured": "Aucun ID de rôle Discord n’est configuré pour le type de votre profil. Contactez l’administrateur.",
   "discord_role_required": "Votre compte Discord n’a pas le rôle requis pour accéder à ce profil.",
@@ -284,5 +285,6 @@
   "approved": "Confirmée",
   "bio": "Biographie",
   "create_type": "Créer un type",
-  "emoji": "Emoji"
+  "emoji": "Emoji",
+  "change_location": "Changer de lieu"
 }

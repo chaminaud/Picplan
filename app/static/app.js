@@ -358,6 +358,57 @@ document.addEventListener("click", (event) => {
           }
           item.append(gallery);
         }
+        const locationOptions = JSON.parse(
+          matrix.querySelector("[data-schedule-locations]")?.textContent || "[]",
+        );
+        if (booking.can_change_location && locationOptions.length > 1) {
+          const form = document.createElement("form");
+          form.method = "post";
+          form.action = `/bookings/${booking.booking_id}/location`;
+          form.className = "grid gap-1";
+          const returnToParticipant = matrix.dataset.returnToParticipant === "1";
+          for (const [field, value] of [
+            ["csrf_token", matrix.dataset.csrfToken],
+            ["participant_id", matrix.dataset.actorId],
+            ["return_to", returnToParticipant ? "participant" : "event"],
+            ["event_id", matrix.dataset.eventId],
+            ["selected_date", matrix.dataset.selectedDate],
+            ["schedule_scope", returnToParticipant ? matrix.dataset.scheduleScope : ""],
+            ["intervener_id", matrix.dataset.intervenerFilterId],
+          ]) {
+            if (!value) continue;
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = field;
+            input.value = String(value);
+            form.append(input);
+          }
+          const label = document.createElement("label");
+          label.className = "text-xs font-semibold text-slate-600";
+          label.textContent = matrix.dataset.changeLocationLabel;
+          const selectId = `booking-location-${booking.booking_id}`;
+          label.htmlFor = selectId;
+          const row = document.createElement("div");
+          row.className = "flex gap-2";
+          const select = document.createElement("select");
+          select.id = selectId;
+          select.name = "location_id";
+          select.className = "min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900";
+          for (const location of locationOptions) {
+            const option = document.createElement("option");
+            option.value = String(location.id);
+            option.textContent = location.name;
+            option.selected = location.id === booking.location_id;
+            select.append(option);
+          }
+          const submit = document.createElement("button");
+          submit.type = "submit";
+          submit.className = "rounded-lg bg-indigo-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-800";
+          submit.textContent = matrix.dataset.saveLabel;
+          row.append(select, submit);
+          form.append(label, row);
+          item.append(form);
+        }
         if (slot.can_review && booking.status_value === "pending") {
           const actions = document.createElement("div");
           actions.className = "flex gap-2";

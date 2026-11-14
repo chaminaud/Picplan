@@ -1103,6 +1103,13 @@ def build_schedule_matrix(
                 "status": translate(language, booking.status.value),
                 "status_value": booking.status.value,
                 "location": booking.location.name,
+                "location_id": booking.location_id,
+                "can_change_location": bool(
+                    participant
+                    and booking.status in active_statuses
+                    and selected_date >= date.today()
+                    and (booking.participant_id == participant.id or can_review)
+                ),
                 "notes": (
                     booking.notes or ""
                     if booking.status != BookingStatus.PENDING
@@ -1212,6 +1219,9 @@ def build_schedule_matrix(
         ),
         "intervener_profiles": intervener_profiles,
         "locations": locations,
+        "location_options": [
+            {"id": location.id, "name": location.name} for location in locations
+        ],
         "rows": rows,
         "hour_labels": hour_labels,
         "grid_slots": grid_slots,
@@ -1512,6 +1522,7 @@ async def participant_portal(
         "selected_intervener": selected_intervener,
         "matrix": matrix,
         "bookings": bookings,
+        "today": date.today(),
         "schedule_scope": selected_scope,
         "generated_slots": (
             request.query_params["generated"]
@@ -1706,6 +1717,114 @@ async def cancel_booking(booking_id: int, request: Request, db: Session = Depend
     booking.status = BookingStatus.CANCELLED
     db.commit()
     return RedirectResponse(url=f"/participant?participant_id={participant_id}", status_code=303)
+
+
+async def notify_booking_location_change(
+    booking: Booking,
+    changed_by: Participant,
+    previous_location: Location,
+) -> None:
+    slot = booking.time_slot
+    changed_by_intervener = changed_by.id == slot.intervener_id
+    recipient = booking.participant if changed_by_intervener else slot.intervener
+    language = get_language(settings.default_language)
+    try:
+        participant_area_url = build_participant_area_url(
+            recipient.id,
+            slot.event_id,
+            slot.date,
+        )
+    except RuntimeError:
+        logger.exception("Cannot build the participant area link for a location change notification.")
+        participant_area_url = ""
+    if participant_area_url and not changed_by_intervener:
+        participant_area_url += "&schedule_scope=mine"
+    notification = translate(language, "discord_booking_location_changed").format(
+        event=slot.event.title,
+        changed_by=changed_by.name,
+        date=slot.date.strftime("%d/%m/%Y"),
+        start=format_time(slot.start_time, language),
+        end=format_time(slot.end_time, language),
+        previous_location=previous_location.name,
+        location=booking.location.name,
+        participant_area_url=participant_area_url,
+    )
+    await send_discord_dm(recipient.discord_id, notification)
+
+
+def booking_location_redirect(participant_id: int, form) -> RedirectResponse:
+    if str(form.get("return_to", "")) == "dashboard":
+        query = {}
+        dashboard_event_id = str(form.get("dashboard_event_id", "")).strip()
+        if dashboard_event_id.isdigit():
+            query["event_id"] = dashboard_event_id
+        url = f"/interveners/{participant_id}"
+        return RedirectResponse(
+            url=f"{url}?{urlencode(query)}" if query else url,
+            status_code=303,
+        )
+    event_id = str(form.get("event_id", "")).strip()
+    if str(form.get("return_to", "")) == "event" and event_id.isdigit():
+        query = {"participant_id": str(participant_id)}
+        selected_date = str(form.get("selected_date", "")).strip()
+        if selected_date:
+            query["selected_date"] = selected_date
+        return RedirectResponse(url=f"/events/{event_id}?{urlencode(query)}", status_code=303)
+    query = {"participant_id": str(participant_id)}
+    for field in ("event_id", "selected_date", "schedule_scope", "intervener_id"):
+        value = str(form.get(field, "")).strip()
+        if value:
+            query[field] = value
+    return RedirectResponse(url=f"/participant?{urlencode(query)}", status_code=303)
+
+
+@router.post("/bookings/{booking_id}/location", name="change_booking_location")
+async def change_booking_location(
+    booking_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    await check_csrf(request)
+    form = await request.form()
+    actor = await require_participant_access(
+        request,
+        db,
+        participant_id=form_int(form.get("participant_id"), "participant"),
+        allow_admin=True,
+    )
+    booking = db.scalar(
+        select(Booking)
+        .where(Booking.id == booking_id)
+        .options(
+            joinedload(Booking.participant),
+            joinedload(Booking.location),
+            joinedload(Booking.time_slot).joinedload(TimeSlot.event),
+            joinedload(Booking.time_slot).joinedload(TimeSlot.intervener),
+        )
+    )
+    if booking is None:
+        raise HTTPException(status_code=404, detail="Booking not found.")
+    slot = booking.time_slot
+    if actor.id not in (booking.participant_id, slot.intervener_id):
+        raise HTTPException(status_code=403, detail="This booking does not belong to this participant.")
+    if request.session.get("is_admin") is not True:
+        require_event_membership(request, db, actor, slot.event_id)
+    else:
+        get_open_event_or_404(db, slot.event_id)
+    if booking.status not in (BookingStatus.PENDING, BookingStatus.APPROVED):
+        raise HTTPException(status_code=409, detail="The location of this booking can no longer be changed.")
+    if slot.date < date.today():
+        raise HTTPException(status_code=409, detail="The location of a past booking cannot be changed.")
+    location = db.get(Location, form_int(form.get("location_id"), "location"))
+    if location is None or location.event_id != slot.event_id:
+        raise HTTPException(status_code=400, detail="Choose a location from this event.")
+    if location.id != booking.location_id:
+        previous_location = booking.location
+        booking.location_id = location.id
+        booking.location = location
+        db.commit()
+        await notify_booking_location_change(booking, actor, previous_location)
+    return booking_location_redirect(actor.id, form)
 
 
 @router.get("/interveners/{participant_id}", name="intervener_dashboard")

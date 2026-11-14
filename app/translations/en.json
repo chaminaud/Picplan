@@ -111,6 +111,7 @@
   "discord_booking_approved": "Your time-slot request was approved.\nEvent: {event}\nDate: {date}, {start}–{end}\nOpen participant area: {participant_area_url}",
   "discord_booking_rejected": "Your time-slot request was declined.\nEvent: {event}\nDate: {date}, {start}–{end}\nReason: {reason}",
   "discord_booking_rejected_after_queue_approval_reason": "The participant ahead of you, {participant}, was approved, so your request was declined.",
+  "discord_booking_location_changed": "The location of a time slot was changed.\nEvent: {event}\nChanged by: {changed_by}\nDate: {date}, {start}–{end}\nPrevious location: {previous_location}\nNew location: {location}\nOpen participant area: {participant_area_url}",
   "discord_member_required": "Your Discord account must be a member of the server connected to PicPlan.",
   "discord_role_not_configured": "No Discord role ID is configured for your profile type. Contact the administrator.",
   "discord_role_required": "Your Discord account does not have the role required to access this profile.",
@@ -284,5 +285,6 @@
   "approved": "Approved",
   "bio": "Bio",
   "create_type": "Create type",
-  "emoji": "Emoji"
+  "emoji": "Emoji",
+  "change_location": "Change location"
 }

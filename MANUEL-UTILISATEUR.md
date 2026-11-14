@@ -132,6 +132,10 @@ Cliquez sur un créneau pour examiner la file. Les demandes sont classées par o
 
 Les messages privés Discord informent les participants des décisions, si leur compte autorise les messages privés du serveur.
 
+### Changer le lieu d’un rendez-vous
+
+Tant que le créneau n’est pas passé, le participant comme l’intervenant peuvent changer le lieu d’une demande en attente ou d’une réservation confirmée. Utilisez le menu **Changer de lieu** dans le panneau du créneau, dans **Mes réservations** ou dans le tableau de bord intervenant, puis cliquez sur **Enregistrer**. L’autre personne reçoit un message privé Discord indiquant l’ancien et le nouveau lieu.
+
 ![Tableau de bord intervenant](docs/screenshots/intervener-dashboard.png)
 
 ![Valider ou refuser une demande](docs/screenshots/intervener-slot-panel.png)
