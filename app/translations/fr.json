@@ -134,6 +134,7 @@
   "end_date": "Date de fin",
   "end_time": "Heure de fin",
   "event": "Événement",
+  "no_event": "Aucun événement",
   "event_schedule": "Planning de l'événement",
   "event_id": "Événement",
   "event_schedules": "Plannings des événements",

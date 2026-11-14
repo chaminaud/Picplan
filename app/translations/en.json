@@ -134,6 +134,7 @@
   "end_date": "End date",
   "end_time": "End time",
   "event": "Event",
+  "no_event": "No event",
   "event_schedule": "Event schedule",
   "event_id": "Event",
   "event_schedules": "Event schedules",

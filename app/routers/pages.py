@@ -3008,6 +3008,11 @@ def admin_participants(request: Request, _admin: None = Depends(require_admin), 
         .order_by(func.lower(Participant.name), Participant.name, Participant.id)
     ).unique().all()
     types = db.scalars(select(ParticipantType).order_by(ParticipantType.name)).all()
+    events = db.scalars(
+        select(Event)
+        .where(Event.is_closed.is_(False))
+        .order_by(Event.start_date, Event.title, Event.id)
+    ).all()
     participant_form_message = {
         "email_in_use": "participant_email_already_in_use",
     }.get(request.query_params.get("participant_error", ""))
@@ -3017,6 +3022,7 @@ def admin_participants(request: Request, _admin: None = Depends(require_admin), 
         {
             "participants": participants,
             "types": types,
+            "events": events,
             "participant_form_message": participant_form_message,
         },
     )
@@ -3033,6 +3039,12 @@ async def create_participant(
     type_id = form_int(form.get("type_id"), "participant type")
     if db.get(ParticipantType, type_id) is None:
         raise HTTPException(status_code=404, detail="Participant type not found.")
+    event_value = str(form.get("event_id", "")).strip()
+    event = (
+        get_open_event_or_404(db, form_int(event_value, "event"))
+        if event_value
+        else None
+    )
     name = str(form.get("name", "")).strip()
     if not name:
         raise HTTPException(status_code=400, detail="Participant name is required.")
@@ -3051,6 +3063,8 @@ async def create_participant(
         social_url=str(form.get("social_url", "")).strip() or None,
         avatar_url=str(form.get("avatar_url", "")).strip() or None,
     )
+    if event:
+        participant.events.append(event)
     participant.photos = [
         ParticipantPhoto(photo_url=url)
         for url in participant_photo_urls(
